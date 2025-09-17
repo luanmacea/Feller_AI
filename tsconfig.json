@@ -1,0 +1,17 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": ["react", "react-native", "expo", "expo-router"],
+    "noEmit": true
+  },
+  "include": ["src", "app"],
+  "exclude": ["node_modules"]
+}
