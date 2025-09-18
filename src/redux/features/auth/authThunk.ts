@@ -30,6 +30,7 @@ export const signIn = createAsyncThunk(
           ...data,
         },
       })
+      console.log(response.data)
       if (response.data[0]?.id) {
         const user = response.data[0]
         await SecureStore.setItemAsync(

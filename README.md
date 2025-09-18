@@ -1,6 +1,13 @@
-# React Native TypeScript Template
+# Sprint3 Mobile
 
-Este é um repositório **template base para projetos React Native com Expo**, ideal para iniciar rapidamente novos apps com uma estrutura moderna e organizada.
+Essa e a Sprint 3 de mobile
+
+integrantes:
+• Davi Passanha de Sousa Guerra - RM551605
+• Cauã Gonçalves de Jesus - RM97648
+• Luan Silveira Macea - RM98290
+• Rui Amorim Siqueira - RM98436
+• Luigi Ferrara Sinno -RM98047
 
 Inclui:
 
@@ -38,7 +45,13 @@ Inclui:
 yarn
 ```
 
-2. Rode o app:
+2. Rodar banco de dados local em novo terminal:
+
+```bash
+json-server --watch db.json --port 3000
+```
+
+3. Rode o app:
 
 ```bash
 npx expo start

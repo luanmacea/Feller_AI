@@ -1,0 +1,32 @@
+{
+  "users": [
+    {
+      "id": "90kd",
+      "name": "João da Silva",
+      "cpf": "12345678900",
+      "email": "joao@email.comAAAAAAAAAAAAAAAA",
+      "password": "senha123"
+    },
+    {
+      "id": "98vd",
+      "name": "Maria Oliveira",
+      "cpf": "98765432100",
+      "email": "maria@email.com",
+      "password": "abc123"
+    },
+    {
+      "id": "89ac",
+      "name": "luan",
+      "cpf": "44313962840",
+      "email": "luanmacea@gmail.com",
+      "password": "123456"
+    },
+    {
+      "id": "7858",
+      "name": "Leandro",
+      "cpf": "91752780060",
+      "email": "a@a.com",
+      "password": "arthur"
+    }
+  ]
+}
