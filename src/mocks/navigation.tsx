@@ -57,7 +57,7 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     title: 'Assistente Virtual',
     headerShown: true,
     headerBackVisible: true,
-    showInFooter: false,
+    showInFooter: true,
     isApp: true,
     icon: <Feather name="trending-up" size={24} color="grey" />,
   },
