@@ -3,6 +3,7 @@ import { View, Pressable, StyleSheet, FlatList } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 
+import Card from '@/components/Card'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
 import { navigationScreensOptions } from '@/mocks/navigation'
@@ -34,24 +35,25 @@ export default function MenuPage() {
         keyExtractor={([route]) => route}
         contentContainerStyle={styles.list}
         renderItem={({ item: [route, options] }) => (
-          <Pressable
-            style={styles.menuItem}
-            onPress={() => handleNavigate(route)}
-          >
-            <View style={styles.icon}>{options.icon}</View>
-            <View>
-              <Text>{options.title}</Text>
-            </View>
+          <Pressable onPress={() => handleNavigate(route)}>
+            <Card style={styles.menuItem}>
+              <View style={styles.icon}>{options.icon}</View>
+              <View>
+                <Text>{options.title}</Text>
+              </View>
+            </Card>
           </Pressable>
         )}
         ListFooterComponent={
-          <Pressable style={styles.menuItem} onPress={() => handleLogout()}>
-            <View style={styles.icon}>
-              <Feather name="log-out" size={24} color="grey" />
-            </View>
-            <View>
-              <Text>Sair</Text>
-            </View>
+          <Pressable onPress={() => handleLogout()}>
+            <Card style={styles.menuItem}>
+              <View style={styles.icon}>
+                <Feather name="log-out" size={24} color="grey" />
+              </View>
+              <View>
+                <Text>Sair</Text>
+              </View>
+            </Card>
           </Pressable>
         }
       />
@@ -66,17 +68,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   menuItem: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   icon: {
     marginRight: 12,

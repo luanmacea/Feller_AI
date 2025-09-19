@@ -53,6 +53,14 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: true,
     icon: <Feather name="dollar-sign" size={24} color="grey" />,
   },
+  'recommendations/index': {
+    title: 'Recomendacoes',
+    headerShown: true,
+    headerBackVisible: true,
+    showInFooter: false,
+    isApp: true,
+    icon: <Feather name="trending-up" size={24} color="grey" />,
+  },
   'menu/index': {
     title: 'Menu',
     headerShown: false,
