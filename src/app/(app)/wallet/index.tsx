@@ -234,8 +234,8 @@ export default function WalletPage() {
   const projectedBalance = walletMock.balance * (1 + activeScenario.delta)
   const projectedYield = averageYield * (1 + activeScenario.delta * 0.6)
 
-  const positiveColor = '#65E0A2'
-  const negativeColor = '#F27C7C'
+  const positiveColor = theme?.colors?.success || '#65E0A2'
+  const negativeColor = theme?.colors?.error || '#F27C7C'
 
   return (
     <Container style={styles.container}>
@@ -245,36 +245,25 @@ export default function WalletPage() {
       >
         <Card contentStyle={styles.balanceCard}>
           <View style={styles.balanceHeader}>
-            <Text style={[styles.balanceLabel, { color: colors.grey2 }]}>
-              Saldo total
-            </Text>
+            <Text style={[styles.balanceLabel]}>Saldo total</Text>
             <Card
               variant="flat"
               style={styles.balanceChipWrapper}
               contentStyle={styles.balanceChip}
             >
-              <Feather
-                name="shield"
-                size={14}
-                color={colors.primary || '#C99A2E'}
-              />
-              <Text
-                style={[
-                  styles.balanceChipText,
-                  { color: colors.primary || '#C99A2E' },
-                ]}
-              >
+              <Feather name="shield" size={14} color={colors.primary} />
+              <Text style={[styles.balanceChipText, { color: colors.primary }]}>
                 Protegido
               </Text>
             </Card>
           </View>
-          <Text style={[styles.balanceValue, { color: colors.white }]}>
+          <Text style={[styles.balanceValue]}>
             {walletMock.balance.toLocaleString('pt-BR', {
               style: 'currency',
               currency: 'BRL',
             })}
           </Text>
-          <Text style={[styles.balanceSub, { color: colors.grey2 }]}>
+          <Text style={[styles.balanceSub]}>
             Disponivel para movimentacao imediata
           </Text>
         </Card>
@@ -333,9 +322,7 @@ export default function WalletPage() {
             <View
               style={[styles.legendDot, { backgroundColor: positiveColor }]}
             />
-            <Text style={[styles.legendText, { color: colors.grey2 }]}>
-              Lucro liquido
-            </Text>
+            <Text style={[styles.legendText]}>Lucro liquido</Text>
           </View>
         </Card>
 
@@ -352,9 +339,7 @@ export default function WalletPage() {
               },
             ]}
           >
-            <Text style={[styles.summaryLabel, { color: colors.grey2 }]}>
-              Distribuicao de ativos
-            </Text>
+            <Text style={[styles.summaryLabel]}>Distribuicao de ativos</Text>
             <View style={styles.pieRow}>
               <View style={styles.pieChartWrapper}>
                 <PieChart
@@ -362,16 +347,10 @@ export default function WalletPage() {
                   innerColor={colors.background || '#0E0E10'}
                 />
                 <View style={styles.pieCenter}>
-                  <Text
-                    style={[styles.pieCenterValue, { color: colors.white }]}
-                  >
+                  <Text style={[styles.pieCenterValue]}>
                     {pieDistribution.length}
                   </Text>
-                  <Text
-                    style={[styles.pieCenterLabel, { color: colors.grey2 }]}
-                  >
-                    classes
-                  </Text>
+                  <Text style={[styles.pieCenterLabel]}>classes</Text>
                 </View>
               </View>
               <View style={styles.pieLegend}>
@@ -383,9 +362,7 @@ export default function WalletPage() {
                         { backgroundColor: item.color },
                       ]}
                     />
-                    <Text style={[styles.legendText, { color: colors.grey2 }]}>
-                      {item.label}
-                    </Text>
+                    <Text style={[styles.legendText]}>{item.label}</Text>
                   </View>
                 ))}
               </View>
@@ -404,16 +381,14 @@ export default function WalletPage() {
               },
             ]}
           >
-            <Text style={[styles.summaryLabel, { color: colors.grey2 }]}>
-              Rendimento medio
-            </Text>
+            <Text style={[styles.summaryLabel]}>Rendimento medio</Text>
             <Text style={[styles.summaryValue, { color: positiveColor }]}>
               {averageYield.toLocaleString('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',
               })}
             </Text>
-            <Text style={[styles.summaryCaption, { color: colors.grey2 }]}>
+            <Text style={[styles.summaryCaption]}>
               Media mensal nos ultimos 12 meses
             </Text>
           </Card>
@@ -504,11 +479,7 @@ export default function WalletPage() {
 
             <View style={styles.modalFooter}>
               <View>
-                <Text
-                  style={[styles.modalMetricLabel, { color: colors.grey2 }]}
-                >
-                  Saldo projetado
-                </Text>
+                <Text style={[styles.modalMetricLabel]}>Saldo projetado</Text>
                 <Text
                   style={[styles.modalMetricValue, { color: colors.grey1 }]}
                 >
@@ -519,9 +490,7 @@ export default function WalletPage() {
                 </Text>
               </View>
               <View>
-                <Text
-                  style={[styles.modalMetricLabel, { color: colors.grey2 }]}
-                >
+                <Text style={[styles.modalMetricLabel]}>
                   Rendimento estimado
                 </Text>
                 <Text
