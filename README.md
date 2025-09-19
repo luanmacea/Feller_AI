@@ -3,11 +3,22 @@
 Essa e a Sprint 3 de mobile
 
 integrantes:
-• Davi Passanha de Sousa Guerra - RM551605
-• Cauã Gonçalves de Jesus - RM97648
-• Luan Silveira Macea - RM98290
-• Rui Amorim Siqueira - RM98436
-• Luigi Ferrara Sinno -RM98047
+
+- Davi Passanha de Sousa Guerra - RM551605
+- Caua Goncalves de Jesus - RM97648
+- Luan Silveira Macea - RM98290
+- Rui Amorim Siqueira - RM98436
+- Luigi Ferrara Sinno - RM98047
+
+Funcionalidades:
+
+- Autenticacao com cadastro, login, logout e persistencia de usuario
+- Recuperacao de senha com verificacao de CPF e alerta global reutilizavel
+- Suporte a tema claro/escuro com alternancia direta no menu do app
+- Dashboard home com resumo da carteira, destaques diarios e acesso rapido a recomendacoes
+- Tela de carteira com graficos interativos, filtros de periodo e simulador de cenarios
+- Perfil do usuario com avatar remoto e dados pessoais centralizados
+- Tratamento centralizado de erros de API exibidos em modal de alerta
 
 Inclui:
 
