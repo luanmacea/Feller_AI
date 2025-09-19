@@ -3349,10 +3349,10 @@ expo-modules-core@2.5.0:
   dependencies:
     invariant "^2.2.4"
 
-expo-router@~5.1.5:
-  version "5.1.5"
-  resolved "https://registry.yarnpkg.com/expo-router/-/expo-router-5.1.5.tgz#832f6021d05d48a60d6317ea8979b10648736d95"
-  integrity sha512-VPhS21DPP+riJIUshs/qpb11L/nzmRK7N7mqSFCr/mjpziznYu/qS+BPeQ88akIuXv6QsXipY5UTfYINdV+P0Q==
+expo-router@~5.1.6:
+  version "5.1.6"
+  resolved "https://registry.yarnpkg.com/expo-router/-/expo-router-5.1.6.tgz#a82aa59b7ffd1b2a17153acf528ef2f9d37ee3b1"
+  integrity sha512-Tc7QFurWqLItrHvbL2TB4OLq8WA4y8fCXPkRG+q9zP4Lk4xKIDskO7/8ff3+XAOHJB5Z8GHn5IhXv4Ik89SVUA==
   dependencies:
     "@expo/metro-runtime" "5.0.4"
     "@expo/schema-utils" "^0.1.0"
@@ -5402,10 +5402,10 @@ react-native-size-matters@^0.4.0:
   resolved "https://registry.yarnpkg.com/react-native-size-matters/-/react-native-size-matters-0.4.2.tgz#4348bdd6fc47383f60326d58ad69870c998a5f9a"
   integrity sha512-DKE3f/sdcozd24oASgkP1iGg+YU3HoajRa5k3a4wkRzpiqREq8SGX12Y5zBgAt/8IivLQoTMYkyQu1/Giuy+zQ==
 
-react-native-svg@^15.13.0:
-  version "15.13.0"
-  resolved "https://registry.yarnpkg.com/react-native-svg/-/react-native-svg-15.13.0.tgz#5244b03ff6fa4c8ac7c8586d73cf8d1f4f665236"
-  integrity sha512-/YPK+PAAXg4T0x2d2vYPvqqAhOYid2bRKxUVT7STIyd1p2JxWmsGQkfZxXCkEFN7TwLfIyVlT5RimT91Pj/qXw==
+react-native-svg@15.11.2:
+  version "15.11.2"
+  resolved "https://registry.yarnpkg.com/react-native-svg/-/react-native-svg-15.11.2.tgz#7540e8e1eabc4dcd3b1e35ada5a1d9f1b96d37c4"
+  integrity sha512-+YfF72IbWQUKzCIydlijV1fLuBsQNGMT6Da2kFlo1sh+LE3BIm/2Q7AR1zAAR6L0BFLi1WaQPLfFUC9bNZpOmw==
   dependencies:
     css-select "^5.1.0"
     css-tree "^1.1.3"
