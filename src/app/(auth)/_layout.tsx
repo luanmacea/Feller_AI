@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Image, TouchableOpacity, View } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
@@ -8,14 +9,22 @@ import { Stack, useNavigation, useRouter } from 'expo-router'
 import logo from '@/assets/logoEscuro.png'
 import Text from '@/components/Text'
 import { navigationScreensOptions } from '@/mocks/navigation'
+import { selectAuthState } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 
 export default function AppLayout() {
+  const router = useRouter()
   const theme = useAppSelector(selectThemeState)
   const pathname = usePathname()
   const screenName = pathname.replace(/^\//, '') + '/index'
   const options = navigationScreensOptions[screenName] || {}
+  const auth = useAppSelector(selectAuthState)
+
+  useEffect(() => {
+    if (!auth.isAuthenticated) return
+    router.replace('loading')
+  }, [auth.isAuthenticated])
 
   return (
     <ThemeProvider theme={theme}>
@@ -23,7 +32,7 @@ export default function AppLayout() {
         screenOptions={{
           headerBackVisible: false, // desativa o botão padrão
           headerTitle: () => {
-            const router = useRouter()
+            // const router = useRouter()
             useNavigation() // necessário para acessar o estado de navegação
             const canGoBack = options.headerBackVisible
 

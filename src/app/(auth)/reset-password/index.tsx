@@ -3,7 +3,6 @@ import { FormProvider, SubmitHandler, useForm } from 'react-hook-form'
 import { View, StyleSheet } from 'react-native'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'expo-router'
 import { z } from 'zod'
 
 import Button from '@/components/Button'
@@ -33,7 +32,6 @@ const ResetPasswordSchema = z
 type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>
 
 export default function ResetPasswordPage() {
-  const router = useRouter()
   const dispatch = useAppDispatch()
   const auth = useAppSelector(selectAuthState)
 
@@ -55,10 +53,6 @@ export default function ResetPasswordPage() {
       dispatch(clearAuth())
     }
   }, [dispatch])
-
-  useEffect(() => {
-    if (auth.isAuthenticated) router.replace('loading')
-  }, [auth.isAuthenticated, router])
 
   const handleSubmit: SubmitHandler<ResetPasswordInput> = async (data) => {
     if (!cpfVerified) {

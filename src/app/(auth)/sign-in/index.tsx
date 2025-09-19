@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form'
 import { View, StyleSheet, TouchableOpacity } from 'react-native'
 
@@ -10,9 +9,8 @@ import Button from '@/components/Button'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
-import { selectAuthState } from '@/redux/features/auth/authSelectors'
 import { signIn } from '@/redux/features/auth/authThunk'
-import { useAppDispatch, useAppSelector } from '@/redux/hook'
+import { useAppDispatch } from '@/redux/hook'
 import { ValidCPF } from '@/utils/validValues'
 
 const SignInSchema = z.object({
@@ -28,7 +26,6 @@ type signInInput = z.infer<typeof SignInSchema>
 export default function SignInPage() {
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const auth = useAppSelector(selectAuthState)
 
   const methods = useForm<signInInput>({
     resolver: zodResolver(SignInSchema),
@@ -37,11 +34,6 @@ export default function SignInPage() {
   const onSubmit: SubmitHandler<signInInput> = (data) => {
     dispatch(signIn(data))
   }
-
-  useEffect(() => {
-    if (!auth.isAuthenticated) return
-    router.replace('loading')
-  }, [auth.isAuthenticated])
 
   return (
     <Container style={{ justifyContent: 'center' }}>

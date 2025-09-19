@@ -1,18 +1,15 @@
-import { useEffect } from 'react'
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form'
 import { View, StyleSheet } from 'react-native'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'expo-router'
 import { z } from 'zod'
 
 import Button from '@/components/Button'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
-import { selectAuthState } from '@/redux/features/auth/authSelectors'
 import { signUp } from '@/redux/features/auth/authThunk'
-import { useAppDispatch, useAppSelector } from '@/redux/hook'
+import { useAppDispatch } from '@/redux/hook'
 import { ValidCPF } from '@/utils/validValues'
 
 const SignUpSchema = z
@@ -36,9 +33,7 @@ const SignUpSchema = z
 type signUpInput = z.infer<typeof SignUpSchema>
 
 export default function SignUpPage() {
-  const router = useRouter()
   const dispatch = useAppDispatch()
-  const auth = useAppSelector(selectAuthState)
 
   const methods = useForm<signUpInput>({
     resolver: zodResolver(SignUpSchema),
@@ -47,11 +42,6 @@ export default function SignUpPage() {
   const onSubmit: SubmitHandler<signUpInput> = async (data) => {
     dispatch(signUp(data))
   }
-
-  useEffect(() => {
-    if (!auth.isAuthenticated) return
-    router.replace('loading')
-  }, [auth.isAuthenticated])
 
   return (
     <Container style={{ justifyContent: 'center' }}>
