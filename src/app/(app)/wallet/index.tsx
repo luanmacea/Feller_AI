@@ -339,38 +339,12 @@ export default function WalletPage() {
           </View>
         </Card>
 
-        <View style={styles.summaryRow}>
+        <View style={styles.summarySection}>
           <Card
             variant="flat"
-            style={styles.summaryCardWrapper}
+            style={styles.distributionWrapper}
             contentStyle={[
-              styles.summaryCard,
-              {
-                backgroundColor: isDark
-                  ? 'rgba(255, 255, 255, 0.04)'
-                  : 'rgba(17, 17, 24, 0.05)',
-              },
-            ]}
-          >
-            <Text style={[styles.summaryLabel, { color: colors.grey2 }]}>
-              Rendimento medio
-            </Text>
-            <Text style={[styles.summaryValue, { color: positiveColor }]}>
-              {averageYield.toLocaleString('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-              })}
-            </Text>
-            <Text style={[styles.summaryCaption, { color: colors.grey2 }]}>
-              Media mensal nos ultimos 12 meses
-            </Text>
-          </Card>
-
-          <Card
-            variant="flat"
-            style={styles.summaryCardWrapper}
-            contentStyle={[
-              styles.summaryCard,
+              styles.distributionCard,
               {
                 backgroundColor: isDark
                   ? 'rgba(255, 255, 255, 0.04)'
@@ -416,6 +390,32 @@ export default function WalletPage() {
                 ))}
               </View>
             </View>
+          </Card>
+
+          <Card
+            variant="flat"
+            style={styles.summaryCardWrapper}
+            contentStyle={[
+              styles.summaryCard,
+              {
+                backgroundColor: isDark
+                  ? 'rgba(255, 255, 255, 0.04)'
+                  : 'rgba(17, 17, 24, 0.05)',
+              },
+            ]}
+          >
+            <Text style={[styles.summaryLabel, { color: colors.grey2 }]}>
+              Rendimento medio
+            </Text>
+            <Text style={[styles.summaryValue, { color: positiveColor }]}>
+              {averageYield.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              })}
+            </Text>
+            <Text style={[styles.summaryCaption, { color: colors.grey2 }]}>
+              Media mensal nos ultimos 12 meses
+            </Text>
           </Card>
         </View>
 
@@ -637,16 +637,27 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 12,
   },
-  summaryRow: {
-    flexDirection: 'row',
+  summarySection: {
     gap: 16,
   },
-  summaryCardWrapper: {
-    flex: 1,
+  distributionWrapper: {
     borderWidth: 0,
     shadowOpacity: 0,
     elevation: 0,
     backgroundColor: 'transparent',
+    width: '100%',
+  },
+  distributionCard: {
+    padding: 20,
+    borderRadius: 20,
+    gap: 12,
+  },
+  summaryCardWrapper: {
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+    backgroundColor: 'transparent',
+    width: '100%',
   },
   summaryCard: {
     padding: 20,
@@ -668,7 +679,8 @@ const styles = StyleSheet.create({
   pieRow: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 8,
+    marginTop: 16,
+    flexWrap: 'wrap',
   },
   pieChartWrapper: {
     width: 140,
@@ -695,6 +707,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 8,
     justifyContent: 'center',
+    minWidth: 120,
   },
   pieLegendRow: {
     flexDirection: 'row',
