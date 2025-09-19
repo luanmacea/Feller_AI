@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, View, ViewStyle } from 'react-native'
+import { StyleSheet, View, ViewStyle, StyleProp } from 'react-native'
 
 import { LinearGradient } from 'expo-linear-gradient'
 
@@ -10,7 +10,7 @@ import { useAppSelector } from '@/redux/hook'
 interface CardProps {
   children: React.ReactNode
   style?: ViewStyle
-  contentStyle?: ViewStyle
+  contentStyle?: StyleProp<ViewStyle>
   variant?: 'gradient' | 'flat'
   gradientColors?: [string, string]
 }
@@ -31,20 +31,26 @@ export default function Card({
   const borderColor = palette.border
   const flatBackground = colors.grey4 || palette.gradient[0]
 
-  const innerStyles = [styles.inner, contentStyle]
+  const innerStyle = StyleSheet.flatten([
+    styles.inner,
+    contentStyle,
+  ]) as ViewStyle
+
+  const flatInnerStyle = StyleSheet.flatten([
+    innerStyle,
+    { backgroundColor: flatBackground },
+  ]) as ViewStyle
 
   return (
     <View style={[styles.container, { borderColor }, style]}>
       {variant === 'flat' ? (
-        <View style={[innerStyles, { backgroundColor: flatBackground }]}>
-          {children}
-        </View>
+        <View style={flatInnerStyle}>{children}</View>
       ) : (
         <LinearGradient
           colors={computedGradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={innerStyles}
+          style={innerStyle}
         >
           {children}
         </LinearGradient>
