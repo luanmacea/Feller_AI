@@ -40,6 +40,7 @@ Inclui:
 | **Chocolatey**  | <https://chocolatey.org/install>               |
 | **Node.js 18+** | `choco install nodejs-lts`                     |
 | **Yarn**        | `npm install -g yarn`                          |
+| **json-server** | `npm install -g json-server`                   |
 | **Expo CLI**    | `npm install -g expo-cli`                      |
 | **Depcheck**    | `npm install -g depcheck`                      |
 
