@@ -53,7 +53,15 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: true,
     icon: <Feather name="dollar-sign" size={24} color="grey" />,
   },
-  'virtual-assistant/index': {
+  'investor-profile/index': {
+    title: 'Perfil de Investidor',
+    headerShown: true,
+    headerBackVisible: false,
+    showInFooter: true,
+    isApp: true,
+    icon: <Feather name="shield" size={24} color="grey" />,
+  },
+  'recommendations/index': {
     title: 'Assistente Virtual',
     headerShown: true,
     headerBackVisible: true,
