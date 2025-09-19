@@ -1,10 +1,11 @@
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form'
-import { View, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, TouchableOpacity, Image } from 'react-native'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'expo-router'
 import { z } from 'zod'
 
+import logo from '@/assets/logoEscuro.png'
 import Button from '@/components/Button'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
@@ -39,10 +40,11 @@ export default function SignInPage() {
     <Container style={{ justifyContent: 'center' }}>
       <FormProvider {...methods}>
         <View style={styles.logoContainer}>
-          <Text variant="title" style={{ marginBottom: 8 }}>
-            Login
-          </Text>
-          <Text variant="subtitle">Entre com seu CPF e sua senha</Text>
+          <Image
+            source={logo}
+            style={{ width: '100%', height: '50%' }}
+            resizeMode="contain"
+          />
         </View>
 
         <View>
@@ -82,13 +84,8 @@ export default function SignInPage() {
 
 const styles = StyleSheet.create({
   logoContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  logo: {
-    width: '100%',
-    height: 128,
-    // backgroundColor: 'black',
+    marginBottom: 16,
+    height: 150,
   },
   forgotButton: {
     alignSelf: 'flex-end',

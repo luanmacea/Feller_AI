@@ -84,7 +84,7 @@ export default function SignUpPage() {
       <FormProvider {...methods}>
         <View style={styles.logoContainer}>
           <Text variant="title" style={{ marginBottom: 8 }}>
-            Cadastrar
+            Crie sua conta
           </Text>
           <Text variant="subtitle">Digite suas informacoes</Text>
         </View>

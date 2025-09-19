@@ -4,22 +4,19 @@ import { ScreenOption } from '@/types/types'
 
 export const navigationScreensOptions: Record<string, ScreenOption> = {
   'sign-in/index': {
-    title: 'Login',
+    title: '',
     headerShown: true,
     headerBackVisible: false,
-    icon: <Feather name="log-in" size={24} color="grey" />,
   },
   'sign-up/index': {
-    title: 'Criar Conta',
+    title: '',
     headerShown: true,
     headerBackVisible: true,
-    icon: <Feather name="user-plus" size={24} color="grey" />,
   },
   'reset-password/index': {
-    title: 'Redefinir Senha',
+    title: '',
     headerShown: true,
     headerBackVisible: true,
-    icon: <Feather name="key" size={24} color="grey" />,
   },
   'home/index': {
     title: 'Home',
@@ -38,7 +35,7 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     icon: <MaterialIcons name="insights" size={24} color="grey" />,
   },
   'profile/index': {
-    title: 'Perfil',
+    title: 'Meus dados',
     headerShown: true,
     headerBackVisible: true,
     showInFooter: false,
@@ -59,7 +56,7 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     headerBackVisible: false,
     showInFooter: true,
     isApp: true,
-    icon: <Feather name="shield" size={24} color="grey" />,
+    icon: <Feather name="user-check" size={24} color="grey" />,
   },
   'virtual-assistant/index': {
     title: 'Assistente Virtual',
@@ -67,7 +64,7 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     headerBackVisible: true,
     showInFooter: true,
     isApp: true,
-    icon: <Feather name="trending-up" size={24} color="grey" />,
+    icon: <Feather name="cpu" size={24} color="grey" />,
   },
   'menu/index': {
     title: 'Menu',

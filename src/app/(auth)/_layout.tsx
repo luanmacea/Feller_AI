@@ -1,12 +1,11 @@
 import { useEffect } from 'react'
-import { Image, TouchableOpacity, View } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import { ThemeProvider } from '@rneui/themed'
 import { usePathname } from 'expo-router'
 import { Stack, useNavigation, useRouter } from 'expo-router'
 
-import logo from '@/assets/logoEscuro.png'
 import Text from '@/components/Text'
 import { navigationScreensOptions } from '@/mocks/navigation'
 import { selectAuthState } from '@/redux/features/auth/authSelectors'
@@ -79,21 +78,6 @@ export default function AppLayout() {
                   <Text style={{ marginLeft: 12, fontWeight: 'bold' }}>
                     {options.title}
                   </Text>
-                </View>
-
-                <View
-                  style={{
-                    paddingHorizontal: 12,
-                  }}
-                >
-                  <Image
-                    source={logo}
-                    style={{
-                      width: 100,
-                      height: 30,
-                    }}
-                    resizeMode="contain"
-                  />
                 </View>
               </View>
             )

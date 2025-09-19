@@ -81,9 +81,6 @@ export default function ResetPasswordPage() {
         <Text variant="title" style={{ marginBottom: 8 }}>
           Recuperar Senha
         </Text>
-        <Text variant="subtitle">
-          {!cpfVerified ? 'Entre com seu CPF' : 'Digite sua nova senha'}
-        </Text>
       </View>
       <FormProvider {...methods}>
         {!cpfVerified ? (

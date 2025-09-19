@@ -129,7 +129,7 @@ export default function InvestorProfilePage() {
         <Card contentStyle={styles.timelineCard}>
           <Text style={[styles.sectionTitle]}>Linha do tempo</Text>
           <View style={styles.timelineTrack}>
-            {PROFILE_TIMELINE.map((entry, index) => (
+            {PROFILE_TIMELINE.reverse().map((entry, index) => (
               <View key={entry.year} style={styles.timelineEntry}>
                 <View style={styles.timelineIndicatorWrapper}>
                   <View
