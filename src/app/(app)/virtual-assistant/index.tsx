@@ -343,6 +343,7 @@ const styles = StyleSheet.create({
     elevation: 0,
     backgroundColor: 'transparent',
     marginTop: 8,
+    marginBottom: 16,
   },
   inputContent: {
     flexDirection: 'row',

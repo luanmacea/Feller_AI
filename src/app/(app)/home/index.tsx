@@ -155,20 +155,22 @@ export default function HomePage() {
               {displayName}
             </Text>
           </View>
-          <Card
-            variant="flat"
-            style={styles.avatarCard}
-            contentStyle={[
-              styles.avatarContent,
-              { backgroundColor: highlightBackground },
-            ]}
-          >
-            <Feather
-              name="user"
-              size={20}
-              color={colors.primary || '#C99A2E'}
-            />
-          </Card>
+          <Pressable onPress={() => router.push('/(app)/profile')}>
+            <Card
+              variant="flat"
+              style={styles.avatarCard}
+              contentStyle={[
+                styles.avatarContent,
+                { backgroundColor: highlightBackground },
+              ]}
+            >
+              <Feather
+                name="user"
+                size={20}
+                color={colors.primary || '#C99A2E'}
+              />
+            </Card>
+          </Pressable>
         </View>
 
         <Card contentStyle={styles.portfolioCard}>
@@ -305,7 +307,9 @@ export default function HomePage() {
             gradientColors={['#D1A954', '#F2C572']}
             contentStyle={styles.virtualAssistantButton}
           >
-            <Text style={styles.virtualAssistantText}>Ver Recomendacoes</Text>
+            <Text style={styles.virtualAssistantText}>
+              Falar com assistente virtual
+            </Text>
             <Feather name="arrow-right" size={20} color="#241B0D" />
           </Card>
         </TouchableOpacity>
