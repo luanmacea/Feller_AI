@@ -1,20 +1,15 @@
 import { useMemo } from 'react'
-import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 
+import Card from '@/components/Card'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
 import { summary, walletMock } from '@/mocks/investmentMocks'
 import { selectUser } from '@/redux/features/auth/authSelectors'
+import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 
 interface SparklineProps {
@@ -54,6 +49,10 @@ function Sparkline({ data, color }: SparklineProps) {
 export default function HomePage() {
   const router = useRouter()
   const user = useAppSelector(selectUser)
+  const theme = useAppSelector(selectThemeState)
+
+  const colors = theme.colors || {}
+  const isDark = theme.mode === 'dark'
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours()
@@ -72,6 +71,11 @@ export default function HomePage() {
   )
   const formattedBalance = balanceFormatter.format(balance)
   const portfolioVariation = summary.portfolioChange
+
+  const highlightBackground = useMemo(
+    () => (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(17, 17, 24, 0.06)'),
+    [isDark],
+  )
 
   const topStocks: TopStockItem[] = useMemo(() => {
     const baseStocks = [...summary.actives, ...summary.negatives]
@@ -96,6 +100,20 @@ export default function HomePage() {
     })
   }, [])
 
+  const stockGradients = useMemo(
+    () =>
+      isDark
+        ? {
+            positive: ['#21372B', '#16161C'] as [string, string],
+            negative: ['#3A1F1F', '#16161C'] as [string, string],
+          }
+        : {
+            positive: ['#FFFFFF', '#E7F4EE'] as [string, string],
+            negative: ['#FFF6F6', '#F7E8E8'] as [string, string],
+          },
+    [isDark],
+  )
+
   const recommendationTarget = '/(app)/recommendations'
 
   return (
@@ -106,86 +124,112 @@ export default function HomePage() {
       >
         <View style={styles.header}>
           <View>
-            <Text variant="subtitle" style={styles.headerSubtitle}>
+            <Text
+              variant="subtitle"
+              style={[styles.headerSubtitle, { color: colors.grey2 }]}
+            >
               {greeting},
             </Text>
-            <Text variant="title" style={styles.headerTitle}>
+            <Text
+              variant="title"
+              style={[styles.headerTitle, { color: colors.grey1 }]}
+            >
               {displayName}
             </Text>
           </View>
-          <Image
-            source={{ uri: user?.avatarUrl }}
-            style={styles.avatarWrapper}
-            resizeMode="cover"
-          />
+          <Card
+            variant="flat"
+            style={styles.avatarCard}
+            contentStyle={[
+              styles.avatarContent,
+              { backgroundColor: highlightBackground },
+            ]}
+          >
+            <Feather
+              name="user"
+              size={20}
+              color={colors.primary || '#C99A2E'}
+            />
+          </Card>
         </View>
 
-        <LinearGradient
-          colors={['#2a2a32', '#16161c']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.portfolioCard}
-        >
+        <Card contentStyle={styles.portfolioCard}>
           <View style={styles.portfolioHeader}>
-            <Text style={styles.portfolioLabel}>Sua carteira</Text>
-            <View
-              style={[
+            <Text style={[styles.portfolioLabel]}>Sua carteira</Text>
+            <Card
+              variant="flat"
+              style={styles.portfolioChipWrapper}
+              contentStyle={[
                 styles.portfolioChip,
-                portfolioVariation >= 0
-                  ? styles.portfolioChipPositive
-                  : styles.portfolioChipNegative,
+                {
+                  backgroundColor:
+                    portfolioVariation >= 0
+                      ? 'rgba(81, 210, 137, 0.16)'
+                      : 'rgba(242, 107, 107, 0.16)',
+                },
               ]}
             >
               <Feather
                 name={portfolioVariation >= 0 ? 'trending-up' : 'trending-down'}
                 size={14}
-                color={portfolioVariation >= 0 ? '#132b16' : '#311512'}
+                color={
+                  portfolioVariation >= 0
+                    ? theme?.colors?.success || 'green'
+                    : theme?.colors?.error || 'red'
+                }
               />
               <Text
                 style={[
                   styles.portfolioChipText,
-                  portfolioVariation >= 0
-                    ? styles.portfolioChipTextPositive
-                    : styles.portfolioChipTextNegative,
+                  {
+                    color:
+                      portfolioVariation >= 0
+                        ? theme?.colors?.success || 'green'
+                        : theme?.colors?.error || 'red',
+                  },
                 ]}
               >
                 {portfolioVariation.toFixed(1)}%
               </Text>
-            </View>
+            </Card>
           </View>
 
-          <Text style={styles.portfolioValue}>{formattedBalance}</Text>
-          <Text style={styles.portfolioHint}>
-            Evolucao acumulada nos ultimos 12 meses
-          </Text>
+          <Text style={[styles.portfolioValue]}>{formattedBalance}</Text>
+          <Text>Evolucao acumulada nos ultimos 12 meses</Text>
 
           <View style={styles.portfolioHighlights}>
             {summary.actives.slice(0, 2).map((item) => (
-              <View key={item.name} style={styles.highlightItem}>
-                <Text style={styles.highlightLabel}>{item.name}</Text>
+              <Card
+                key={item.name}
+                variant="flat"
+                style={styles.highlightCard}
+                contentStyle={[
+                  styles.highlightContent,
+                  { backgroundColor: highlightBackground },
+                ]}
+              >
+                <Text style={[styles.highlightLabel]}>{item.name}</Text>
                 <Text
                   style={[
                     styles.highlightValue,
-                    item.isPositive
-                      ? styles.highlightPositive
-                      : styles.highlightNegative,
+                    {
+                      color: item.isPositive
+                        ? theme?.colors?.success
+                        : theme?.colors?.error,
+                    },
                   ]}
                 >
                   {item.variation > 0 ? '+' : ''}
                   {item.variation.toFixed(1)}%
                 </Text>
-              </View>
+              </Card>
             ))}
           </View>
-        </LinearGradient>
+        </Card>
 
         <View style={styles.sectionHeader}>
-          <Text variant="subtitle" style={styles.sectionTitle}>
-            Top acoes do dia
-          </Text>
-          <Text style={styles.sectionCaption}>
-            Monitoramos os destaques para voce decidir com confianca
-          </Text>
+          <Text variant="title">Top acoes do dia</Text>
+          <Text>Monitoramos os destaques para voce decidir com confianca</Text>
         </View>
 
         <ScrollView
@@ -193,25 +237,41 @@ export default function HomePage() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carousel}
         >
-          {topStocks.map((stock) => {
+          {topStocks.map((stock, index) => {
             const positive = stock.isPositive
-            const color = positive ? '#51d289' : '#f26b6b'
+            const gradient = stockGradients[positive ? 'positive' : 'negative']
             return (
-              <View key={stock.name} style={styles.stockCard}>
+              <Card
+                key={`${stock.name}-${index}`}
+                style={styles.stockCardWrapper}
+                contentStyle={styles.stockCardContent}
+                gradientColors={gradient}
+              >
                 <View style={styles.stockHeader}>
-                  <Text style={styles.stockName}>{stock.name}</Text>
+                  <Text variant="subtitle">{stock.name}</Text>
                   <Text
                     style={[
                       styles.stockVariation,
-                      positive ? styles.stockPositive : styles.stockNegative,
+                      {
+                        color: positive
+                          ? theme?.colors?.success
+                          : theme?.colors?.error,
+                      },
                     ]}
                   >
                     {positive ? '+' : ''}
                     {stock.variation.toFixed(1)}%
                   </Text>
                 </View>
-                <Sparkline data={stock.series} color={color} />
-              </View>
+                <Sparkline
+                  data={stock.series}
+                  color={
+                    positive
+                      ? theme?.colors?.success || 'green'
+                      : theme?.colors?.error || 'red'
+                  }
+                />
+              </Card>
             )
           })}
         </ScrollView>
@@ -220,15 +280,14 @@ export default function HomePage() {
           activeOpacity={0.9}
           onPress={() => router.push(recommendationTarget)}
         >
-          <LinearGradient
-            colors={['#d1a954', '#f2c572']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.recommendationsButton}
+          <Card
+            style={styles.recommendationsWrapper}
+            gradientColors={['#D1A954', '#F2C572']}
+            contentStyle={styles.recommendationsButton}
           >
             <Text style={styles.recommendationsText}>Ver Recomendacoes</Text>
-            <Feather name="arrow-right" size={20} color="#241b0d" />
-          </LinearGradient>
+            <Feather name="arrow-right" size={20} color="#241B0D" />
+          </Card>
         </TouchableOpacity>
       </ScrollView>
     </Container>
@@ -237,7 +296,7 @@ export default function HomePage() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#0e0e10',
+    paddingBottom: 0,
   },
   scrollContent: {
     paddingBottom: 32,
@@ -249,29 +308,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerSubtitle: {
-    color: '#b3b3c7',
     marginBottom: 4,
   },
   headerTitle: {
-    color: '#f7f3e8',
     fontSize: 26,
   },
-  avatarWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#d1a954',
-    alignItems: 'center',
+  avatarCard: {
+    width: 48,
+    height: 48,
+    borderWidth: 0,
+    shadowOpacity: 0,
+  },
+  avatarContent: {
+    flex: 1,
     justifyContent: 'center',
-    backgroundColor: '#1a1a21',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 0,
   },
   portfolioCard: {
-    borderRadius: 20,
+    gap: 16,
     padding: 24,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#d1a95422',
+    borderRadius: 24,
   },
   portfolioHeader: {
     flexDirection: 'row',
@@ -279,57 +337,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   portfolioLabel: {
-    color: '#d8d8e8',
     fontSize: 16,
+  },
+  portfolioChipWrapper: {
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+    backgroundColor: 'transparent',
   },
   portfolioChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
     paddingVertical: 6,
+    paddingHorizontal: 10,
     borderRadius: 999,
-  },
-  portfolioChipPositive: {
-    backgroundColor: '#2d6539',
-  },
-  portfolioChipNegative: {
-    backgroundColor: '#6b2d2d',
   },
   portfolioChipText: {
     fontSize: 12,
     fontWeight: '600',
   },
-  portfolioChipTextPositive: {
-    color: '#d6f5e2',
-  },
-  portfolioChipTextNegative: {
-    color: '#ffd6d6',
-  },
   portfolioValue: {
-    color: '#f9f5e4',
     fontSize: 32,
     fontWeight: '700',
-  },
-  portfolioHint: {
-    color: '#9e9eb0',
   },
   portfolioHighlights: {
     flexDirection: 'row',
     gap: 16,
-    marginTop: 12,
   },
-  highlightItem: {
+  highlightCard: {
     flex: 1,
-    backgroundColor: '#232329',
-    borderRadius: 12,
-    padding: 12,
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+    backgroundColor: 'transparent',
+  },
+  highlightContent: {
+    borderRadius: 16,
     gap: 6,
-    borderWidth: 1,
-    borderColor: '#2f2f38',
   },
   highlightLabel: {
-    color: '#b9b9cb',
     fontSize: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -338,21 +385,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  highlightPositive: {
-    color: '#65e0a2',
-  },
-  highlightNegative: {
-    color: '#f27c7c',
-  },
   sectionHeader: {
     gap: 6,
   },
   sectionTitle: {
-    color: '#f2f2ff',
     fontSize: 18,
   },
   sectionCaption: {
-    color: '#9b9bb0',
     fontSize: 13,
   },
   carousel: {
@@ -360,15 +399,15 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingRight: 8,
   },
-  stockCard: {
-    width: 160,
-    backgroundColor: '#1d1d24',
-    borderRadius: 16,
-    padding: 16,
+  stockCardWrapper: {
+    width: 170,
     marginRight: 16,
-    borderWidth: 1,
-    borderColor: '#2c2c35',
+    borderRadius: 18,
+  },
+  stockCardContent: {
     gap: 12,
+    padding: 16,
+    borderRadius: 18,
   },
   stockHeader: {
     flexDirection: 'row',
@@ -376,17 +415,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   stockName: {
-    color: '#f4f4fb',
     fontWeight: '600',
   },
   stockVariation: {
     fontWeight: '600',
-  },
-  stockPositive: {
-    color: '#65e0a2',
-  },
-  stockNegative: {
-    color: '#f27c7c',
   },
   sparkline: {
     flexDirection: 'row',
@@ -403,17 +435,21 @@ const styles = StyleSheet.create({
     width: 4,
     borderRadius: 4,
   },
+  recommendationsWrapper: {
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   recommendationsButton: {
-    marginTop: 8,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 18,
   },
   recommendationsText: {
-    color: '#241b0d',
+    color: '#241B0D',
     fontSize: 16,
     fontWeight: '600',
   },

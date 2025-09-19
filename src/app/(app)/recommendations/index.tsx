@@ -1,20 +1,19 @@
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 
+import Card from '@/components/Card'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
 
 export default function RecommendationsPage() {
   return (
     <Container style={styles.container}>
-      <View style={styles.card}>
-        <Text variant="title" style={styles.title}>
-          Recomendacoes
-        </Text>
+      <Card>
+        <Text variant="title">Recomendacoes</Text>
         <Text style={styles.description}>
           Em breve voce vera aqui sugestoes personalizadas do assistente para
           ajustar sua carteira com base no seu perfil de risco e objetivos.
         </Text>
-      </View>
+      </Card>
     </Container>
   )
 }
@@ -38,7 +37,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   description: {
-    color: '#ccccd6',
     textAlign: 'center',
     lineHeight: 20,
   },
