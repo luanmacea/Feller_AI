@@ -1,5 +1,11 @@
 import { useMemo } from 'react'
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
@@ -7,7 +13,7 @@ import { useRouter } from 'expo-router'
 import Card from '@/components/Card'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
-import { summary, walletMock } from '@/mocks/investmentMocks'
+import { investmentDetails, summary, walletMock } from '@/mocks/investmentMocks'
 import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
@@ -18,6 +24,7 @@ interface SparklineProps {
 }
 
 interface TopStockItem {
+  id?: string
   name: string
   variation: number
   isPositive: boolean
@@ -79,10 +86,12 @@ export default function HomePage() {
 
   const topStocks: TopStockItem[] = useMemo(() => {
     const baseStocks = [...summary.actives, ...summary.negatives]
+    const details = Object.values(investmentDetails)
 
     return baseStocks.map((item, index) => {
       const direction = item.isPositive ? 1 : -1
       const amplitude = Math.max(Math.abs(item.variation) * 2, 4)
+      const match = details.find((detail) => detail.name === item.name)
 
       const series = Array.from({ length: 8 }, (_, idx) => {
         const trend = direction * idx * (Math.abs(item.variation) / 3)
@@ -92,6 +101,7 @@ export default function HomePage() {
       })
 
       return {
+        id: match?.id,
         name: item.name,
         variation: item.variation,
         isPositive: item.isPositive,
@@ -115,6 +125,14 @@ export default function HomePage() {
   )
 
   const recommendationTarget = '/(app)/recommendations'
+  const handleSelectStock = (stock: TopStockItem) => {
+    if (stock.id) {
+      router.push({
+        pathname: '/(app)/investmentDetails',
+        params: { id: stock.id },
+      })
+    }
+  }
 
   return (
     <Container>
@@ -231,7 +249,6 @@ export default function HomePage() {
           <Text variant="title">Top acoes do dia</Text>
           <Text>Monitoramos os destaques para voce decidir com confianca</Text>
         </View>
-
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -241,41 +258,41 @@ export default function HomePage() {
             const positive = stock.isPositive
             const gradient = stockGradients[positive ? 'positive' : 'negative']
             return (
-              <Card
+              <Pressable
                 key={`${stock.name}-${index}`}
-                style={styles.stockCardWrapper}
-                contentStyle={styles.stockCardContent}
-                gradientColors={gradient}
+                style={styles.stockPressable}
+                onPress={() => handleSelectStock(stock)}
               >
-                <View style={styles.stockHeader}>
-                  <Text variant="subtitle">{stock.name}</Text>
-                  <Text
-                    style={[
-                      styles.stockVariation,
-                      {
-                        color: positive
-                          ? theme?.colors?.success
-                          : theme?.colors?.error,
-                      },
-                    ]}
-                  >
-                    {positive ? '+' : ''}
-                    {stock.variation.toFixed(1)}%
-                  </Text>
-                </View>
-                <Sparkline
-                  data={stock.series}
-                  color={
-                    positive
-                      ? theme?.colors?.success || 'green'
-                      : theme?.colors?.error || 'red'
-                  }
-                />
-              </Card>
+                <Card
+                  style={styles.stockCardWrapper}
+                  contentStyle={styles.stockCardContent}
+                  gradientColors={gradient}
+                >
+                  <View style={styles.stockHeader}>
+                    <Text variant="subtitle">{stock.name}</Text>
+                    <Text
+                      style={[
+                        styles.stockVariation,
+                        {
+                          color: positive
+                            ? theme?.colors?.success
+                            : theme?.colors?.error,
+                        },
+                      ]}
+                    >
+                      {positive ? '+' : ''}
+                      {stock.variation.toFixed(1)}%
+                    </Text>
+                  </View>
+                  <Sparkline
+                    data={stock.series}
+                    color={positive ? '#51d289' : '#f26b6b'}
+                  />
+                </Card>
+              </Pressable>
             )
           })}
         </ScrollView>
-
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => router.push(recommendationTarget)}
@@ -395,9 +412,11 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingRight: 8,
   },
+  stockPressable: {
+    marginRight: 16,
+  },
   stockCardWrapper: {
     width: 170,
-    marginRight: 16,
     borderRadius: 18,
   },
   stockCardContent: {
