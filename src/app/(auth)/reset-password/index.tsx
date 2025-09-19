@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'expo-router'
 import { z } from 'zod'
 
-import Alert from '@/components/Alert'
 import Button from '@/components/Button'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
@@ -109,13 +108,6 @@ export default function ResetPasswordPage() {
           onPress={methods.handleSubmit(handleCpfSubmit)}
         />
       </FormProvider>
-      <Alert
-        title="Erro recuperar senha"
-        message={'CPF não encontrado'}
-        open={!!auth.error}
-        onClose={() => dispatch(clearAuth())}
-        type="error"
-      />
     </Container>
   )
 }

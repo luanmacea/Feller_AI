@@ -6,13 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'expo-router'
 import { z } from 'zod'
 
-import Alert from '@/components/Alert'
 import Button from '@/components/Button'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
 import { selectAuthState } from '@/redux/features/auth/authSelectors'
-import { clearAuth } from '@/redux/features/auth/authSlice'
 import { signIn } from '@/redux/features/auth/authThunk'
 import { useAppDispatch, useAppSelector } from '@/redux/hook'
 import { ValidCPF } from '@/utils/validValues'
@@ -86,13 +84,6 @@ export default function SignInPage() {
           </TouchableOpacity>
         </View>
       </FormProvider>
-      <Alert
-        title="Erro login"
-        message={'CPF ou senha incorretos'}
-        open={!!auth.error}
-        onClose={() => dispatch(clearAuth())}
-        type="error"
-      />
     </Container>
   )
 }

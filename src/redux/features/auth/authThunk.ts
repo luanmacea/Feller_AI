@@ -25,33 +25,44 @@ export const signIn = createAsyncThunk(
   'auth/signIn',
   async (data: ISignInProps, { rejectWithValue }) => {
     try {
-      console.log(api + '/users')
       const response = await api.get('/users', {
         params: {
           ...data,
         },
       })
-      console.log(response.data)
+
       if (response.data[0]?.id) {
         const user = response.data[0]
         await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
         return response.data
       }
-      return rejectWithValue('CPF ou senha incorretos')
+
+      return rejectWithValue('CPF ou senha incorretos.')
     } catch (error) {
       console.error('Erro ao fazer login:', error)
-      throw new Error('Erro ao fazer login')
+      return rejectWithValue('Erro ao fazer login.')
     }
   },
 )
 
 export const signUp = createAsyncThunk(
   'auth/signUp',
-  async (data: ISignUpProps) => {
+  async (data: ISignUpProps, { rejectWithValue }) => {
     try {
+      const { cpf } = data
+
+      const existingUsersResponse = await api.get('/users', {
+        params: { cpf },
+      })
+      const existingUsers = existingUsersResponse.data
+
+      if (existingUsers.length > 0) {
+        return rejectWithValue('Este CPF ja esta cadastrado.')
+      }
+
       const newUser = {
         name: data.name,
-        cpf: data.cpf,
+        cpf,
         email: data.email,
         password: data.password,
       }
@@ -60,8 +71,8 @@ export const signUp = createAsyncThunk(
       await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
       return response.data
     } catch (error) {
-      console.error('Erro ao cadastrar o usuário:', error)
-      throw new Error('Erro ao cadastrar o usuário')
+      console.error('Erro ao cadastrar o usuario:', error)
+      return rejectWithValue('Erro ao cadastrar o usuario.')
     }
   },
 )
@@ -81,7 +92,7 @@ export const changePassword = createAsyncThunk(
       const users = findResponse.data
 
       if (!Array.isArray(users) || users.length === 0) {
-        return rejectWithValue('CPF não encontrado.')
+        return rejectWithValue('CPF nao encontrado.')
       }
 
       const user = users[0]

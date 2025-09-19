@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit'
 
 import { IUser } from '@/types/types'
 
-import { logOut, signIn } from './authThunk'
+import { logOut, signIn, signUp } from './authThunk'
 
 export interface AuthState {
   isLoading: boolean
@@ -49,8 +49,33 @@ export const authSlice = createSlice({
     })
     builder.addCase(signIn.rejected, (state, action) => {
       state.isLoading = false
-      console.log(action.error)
-      state.error = action.error.message || 'Falha ao logar'
+      state.error =
+        (action.payload as string) ||
+        action.error.message ||
+        'CPF ou senha incorretos.'
+    })
+
+    builder.addCase(signUp.pending, (state) => {
+      state.isLoading = true
+    })
+    builder.addCase(signUp.fulfilled, (state, action) => {
+      state.user = {
+        id: action.payload.id,
+        name: action.payload.name,
+        cpf: action.payload.cpf,
+        email: action.payload.email,
+      }
+      state.isAuthenticated = true
+      state.isLoading = false
+      state.error = ''
+    })
+
+    builder.addCase(signUp.rejected, (state, action) => {
+      state.isLoading = false
+      state.error =
+        (action.payload as string) ||
+        action.error.message ||
+        'CPF ja cadastrado.'
     })
 
     builder.addCase(logOut.pending, (state) => {
