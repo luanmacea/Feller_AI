@@ -17,7 +17,7 @@ export default function InvestmentDetailsPage() {
   return (
     <Container>
       <View style={styles.card}>
-        <Text style={styles.title}>{investment.name}aaaaaaaaaaa</Text>
+        <Text style={styles.title}>{investment.name}</Text>
         <Text style={styles.description}>{investment.description}</Text>
 
         <View style={styles.row}>
