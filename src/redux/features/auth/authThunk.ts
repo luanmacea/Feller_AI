@@ -81,6 +81,34 @@ export const logOut = createAsyncThunk('auth/logOut', async () => {
   await AsyncStorage.removeItem(LocalStore.USER_DATA)
 })
 
+export const verifyCpf = createAsyncThunk(
+  'auth/verifyCpf',
+  async ({ cpf }: { cpf: string }, { rejectWithValue }) => {
+    try {
+      const response = await api.get('/users', {
+        params: { cpf },
+      })
+      const users = response.data
+
+      if (!Array.isArray(users) || users.length === 0) {
+        return rejectWithValue('CPF nao encontrado.')
+      }
+
+      const user = users[0]
+
+      return {
+        id: user.id,
+        name: user.name,
+        cpf: user.cpf,
+        email: user.email,
+      }
+    } catch (error) {
+      console.error('Erro ao verificar CPF:', error)
+      return rejectWithValue('Erro ao verificar CPF.')
+    }
+  },
+)
+
 export const changePassword = createAsyncThunk(
   'auth/changePassword',
   async ({ cpf, newPassword }: IChangePasswordProps, { rejectWithValue }) => {
@@ -101,10 +129,7 @@ export const changePassword = createAsyncThunk(
       })
       await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
 
-      return {
-        message: 'Senha alterada com sucesso.',
-        user: updateResponse.data,
-      }
+      return updateResponse.data
     } catch (error: any) {
       const message =
         error?.response?.data?.message || 'Erro ao alterar a senha.'

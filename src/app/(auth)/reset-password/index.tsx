@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form'
 import { View, StyleSheet } from 'react-native'
 
@@ -12,7 +12,7 @@ import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
 import { selectAuthState } from '@/redux/features/auth/authSelectors'
 import { clearAuth } from '@/redux/features/auth/authSlice'
-import { changePassword } from '@/redux/features/auth/authThunk'
+import { changePassword, verifyCpf } from '@/redux/features/auth/authThunk'
 import { useAppDispatch, useAppSelector } from '@/redux/hook'
 import { ValidCPF } from '@/utils/validValues'
 
@@ -37,36 +37,49 @@ export default function ResetPasswordPage() {
   const dispatch = useAppDispatch()
   const auth = useAppSelector(selectAuthState)
 
-  const [cpfVerified, setCpfVerified] = useState(false)
-
   const methods = useForm<ResetPasswordInput>({
     resolver: zodResolver(ResetPasswordSchema),
+    defaultValues: {
+      cpf: '',
+      password: '',
+      confirmPassword: '',
+    },
   })
 
-  const handleCpfSubmit: SubmitHandler<ResetPasswordInput> = (data) => {
-    // if (!cpfVerified) {
-    //   dispatch(checkCpfExists({ cpf: data.cpf }))
-    //   return
-    // }
+  const cpfVerified = auth.isCpfVerified
+
+  useEffect(() => {
+    dispatch(clearAuth())
+
+    return () => {
+      dispatch(clearAuth())
+    }
+  }, [dispatch])
+
+  useEffect(() => {
+    if (auth.isAuthenticated) router.replace('loading')
+  }, [auth.isAuthenticated, router])
+
+  const handleSubmit: SubmitHandler<ResetPasswordInput> = async (data) => {
+    if (!cpfVerified) {
+      await dispatch(verifyCpf({ cpf: data.cpf }))
+      return
+    }
+
     if (!data.password) {
       methods.setError('password', {
         message: 'Campo de senha é obrigatório',
       })
       return
     }
-    console.log(data)
-    dispatch(changePassword({ cpf: data.cpf, newPassword: data.password }))
+
+    dispatch(
+      changePassword({
+        cpf: auth.verifiedCpf ?? data.cpf,
+        newPassword: data.password,
+      }),
+    )
   }
-
-  useEffect(() => {
-    // if (!auth.cpfExists) return
-    setCpfVerified(true)
-    dispatch(clearAuth())
-  }, [])
-
-  useEffect(() => {
-    if (auth.isAuthenticated) router.replace('loading')
-  }, [auth.isAuthenticated])
 
   return (
     <Container style={{ justifyContent: 'center' }}>
@@ -105,7 +118,7 @@ export default function ResetPasswordPage() {
         <Button
           style={{ marginTop: 16 }}
           title={!cpfVerified ? 'Enviar' : 'Alterar'}
-          onPress={methods.handleSubmit(handleCpfSubmit)}
+          onPress={methods.handleSubmit(handleSubmit)}
         />
       </FormProvider>
     </Container>
