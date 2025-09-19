@@ -117,7 +117,7 @@ export default function HomePage() {
   const recommendationTarget = '/(app)/recommendations'
 
   return (
-    <Container style={styles.container}>
+    <Container>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -295,11 +295,7 @@ export default function HomePage() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 0,
-  },
   scrollContent: {
-    paddingBottom: 32,
     gap: 24,
   },
   header: {
