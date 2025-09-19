@@ -248,6 +248,9 @@ export default function HomePage() {
         <View style={styles.sectionHeader}>
           <Text variant="title">Top acoes do dia</Text>
           <Text>Monitoramos os destaques para voce decidir com confianca</Text>
+          <Text variant="caption">
+            (clique na acao desejada para mais detalhes)
+          </Text>
         </View>
         <ScrollView
           horizontal

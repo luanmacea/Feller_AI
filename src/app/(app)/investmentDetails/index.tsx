@@ -91,25 +91,11 @@ export default function InvestmentDetailsPage() {
             />
           </View>
           <View style={{ flex: 1 }}>
-            <Text
-              style={[styles.headerTitle, { color: colors.grey1 || '#1d2c44' }]}
-            >
-              {investment.name}
-            </Text>
-            <Text
-              style={[
-                styles.headerSubtitle,
-                { color: colors.grey2 || '#5c6f8d' },
-              ]}
-            >
+            <Text style={[styles.headerTitle]}>{investment.name}</Text>
+            <Text style={[styles.headerSubtitle]}>
               Investimento do setor {investment.category}
             </Text>
-            <Text
-              style={[
-                styles.headerDescription,
-                { color: colors.grey2 || '#5c6f8d' },
-              ]}
-            >
+            <Text style={[styles.headerDescription]}>
               _{investment.description}_
             </Text>
           </View>
@@ -120,7 +106,7 @@ export default function InvestmentDetailsPage() {
             <MetricBlock
               label="Valor atual"
               value={formatCurrency(investment.value)}
-              color={colors.white || '#f4f7ff'}
+              color={colors.grey2 || '#f4f7ff'}
             />
             <MetricBlock
               label="Variacao"
@@ -178,7 +164,7 @@ export default function InvestmentDetailsPage() {
             gradientColors={['#2f60ff', '#4c87ff']}
             contentStyle={styles.ctaContent}
           >
-            <View>
+            <View style={{ width: '90%' }}>
               <Text style={styles.ctaTitle}>
                 Conversar com Assistente sobre este ativo
               </Text>
