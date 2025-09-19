@@ -16,6 +16,7 @@ import Text from '@/components/Text'
 import { navigationScreensOptions } from '@/mocks/navigation'
 import { logOut } from '@/redux/features/auth/authThunk'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
+import { toggleTheme } from '@/redux/features/theme/themeSlice'
 import { useAppDispatch, useAppSelector } from '@/redux/hook'
 import type { ScreenOption } from '@/types/types'
 
@@ -25,7 +26,7 @@ export default function MenuPage() {
   const theme = useAppSelector(selectThemeState)
 
   const isDark = theme.mode === 'dark'
-  const colors = theme.colors
+  const colors = theme.colors || {}
 
   const itemBackground = useMemo(
     () => (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(17, 17, 24, 0.04)'),
@@ -48,6 +49,10 @@ export default function MenuPage() {
   const handleLogout = () => {
     dispatch(logOut())
     router.replace('loading')
+  }
+
+  const handleToggleTheme = () => {
+    dispatch(toggleTheme())
   }
 
   const renderItem: ListRenderItem<MenuEntry> = ({
@@ -101,30 +106,59 @@ export default function MenuPage() {
         contentContainerStyle={styles.list}
         renderItem={renderItem}
         ListFooterComponent={
-          <Pressable onPress={() => handleLogout()}>
-            <Card
-              variant="flat"
-              style={styles.menuCard}
-              contentStyle={[
-                styles.menuContent,
-                { backgroundColor: itemBackground },
-              ]}
-            >
-              <View
+          <View style={styles.footer}>
+            <Pressable onPress={() => handleLogout()}>
+              <Card
+                variant="flat"
+                style={styles.menuCard}
+                contentStyle={[
+                  styles.menuContent,
+                  { backgroundColor: itemBackground },
+                ]}
+              >
+                <View
+                  style={[
+                    styles.icon,
+                    {
+                      backgroundColor: isDark
+                        ? 'rgba(255, 255, 255, 0.07)'
+                        : 'rgba(17, 17, 24, 0.08)',
+                    },
+                  ]}
+                >
+                  <Feather name="log-out" size={22} color={iconTint} />
+                </View>
+                <Text style={[styles.title, { color: textColor }]}>Sair</Text>
+              </Card>
+            </Pressable>
+
+            <View style={styles.themeRow}>
+              <Text style={[styles.footerLabel, { color: textColor }]}>
+                Modo escuro
+              </Text>
+              <Pressable
+                onPress={handleToggleTheme}
                 style={[
-                  styles.icon,
+                  styles.themeSwitch,
                   {
                     backgroundColor: isDark
-                      ? 'rgba(255, 255, 255, 0.07)'
+                      ? colors.primary || '#C99A2E'
                       : 'rgba(17, 17, 24, 0.08)',
                   },
                 ]}
               >
-                <Feather name="log-out" size={22} color={iconTint} />
-              </View>
-              <Text style={[styles.title, { color: textColor }]}>Sair</Text>
-            </Card>
-          </Pressable>
+                <View
+                  style={[
+                    styles.switchThumb,
+                    isDark && {
+                      transform: [{ translateX: 20 }],
+                      backgroundColor: '#241B0D',
+                    },
+                  ]}
+                />
+              </Pressable>
+            </View>
+          </View>
         }
       />
     </Container>
@@ -161,5 +195,34 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  footer: {
+    gap: 12,
+    paddingTop: 8,
+  },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 16,
+  },
+  footerLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  themeSwitch: {
+    width: 48,
+    height: 28,
+    borderRadius: 999,
+    padding: 4,
+    justifyContent: 'center',
+  },
+  switchThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
   },
 })
