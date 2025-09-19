@@ -1,5 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import * as SecureStore from 'expo-secure-store'
 
 import { LocalStore } from '@/constants/environment-variables'
 import api from '@/services/api'
@@ -25,6 +25,7 @@ export const signIn = createAsyncThunk(
   'auth/signIn',
   async (data: ISignInProps, { rejectWithValue }) => {
     try {
+      console.log(api + '/users')
       const response = await api.get('/users', {
         params: {
           ...data,
@@ -33,10 +34,7 @@ export const signIn = createAsyncThunk(
       console.log(response.data)
       if (response.data[0]?.id) {
         const user = response.data[0]
-        await SecureStore.setItemAsync(
-          LocalStore.USER_DATA,
-          JSON.stringify(user),
-        )
+        await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
         return response.data
       }
       return rejectWithValue('CPF ou senha incorretos')
@@ -59,7 +57,7 @@ export const signUp = createAsyncThunk(
       }
       const response = await api.post('/users', newUser)
       const user = response.data
-      await SecureStore.setItemAsync(LocalStore.USER_DATA, JSON.stringify(user))
+      await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
       return response.data
     } catch (error) {
       console.error('Erro ao cadastrar o usuário:', error)
@@ -69,7 +67,7 @@ export const signUp = createAsyncThunk(
 )
 
 export const logOut = createAsyncThunk('auth/logOut', async () => {
-  await SecureStore.deleteItemAsync(LocalStore.USER_DATA)
+  await AsyncStorage.removeItem(LocalStore.USER_DATA)
 })
 
 export const changePassword = createAsyncThunk(
@@ -90,7 +88,7 @@ export const changePassword = createAsyncThunk(
       const updateResponse = await api.patch(`/users/${user.id}`, {
         password: newPassword,
       })
-      await SecureStore.setItemAsync(LocalStore.USER_DATA, JSON.stringify(user))
+      await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
 
       return {
         message: 'Senha alterada com sucesso.',

@@ -27,6 +27,13 @@
       "cpf": "91752780060",
       "email": "a@a.com",
       "password": "arthur"
+    },
+    {
+      "id": "9c95",
+      "name": "aaa",
+      "cpf": "44313962840",
+      "email": "luanmacea@gmail.com",
+      "password": "123"
     }
   ]
 }

@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    color: '#000',
+    // color: '#000',
   },
   footerLink: {
     fontSize: 14,

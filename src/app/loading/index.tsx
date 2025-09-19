@@ -3,7 +3,6 @@ import { View, Text, StyleSheet } from 'react-native'
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect } from 'expo-router'
-import * as SecureStore from 'expo-secure-store'
 
 import { Loading } from '@/components/Loading'
 import { LocalStore } from '@/constants/environment-variables'
@@ -25,7 +24,7 @@ export default function LoadingPage() {
 
   const checkUserAuthentication = async () => {
     try {
-      const userData = await SecureStore.getItemAsync(LocalStore.USER_DATA)
+      const userData = await AsyncStorage.getItem(LocalStore.USER_DATA)
       if (userData) {
         dispatch(setUser(JSON.parse(userData)))
         setInitialRoute('/(app)/home')
