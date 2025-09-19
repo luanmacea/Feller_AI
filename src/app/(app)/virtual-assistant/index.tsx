@@ -25,18 +25,16 @@ interface Message {
 
 const INITIAL_MESSAGES: Message[] = [
   {
+    id: '2',
+    role: 'assistant',
+    content:
+      'Atualmente a função de chat está em desenvolvimento. Tente novamente mais tarde.',
+  },
+  {
     id: '1',
     role: 'assistant',
     content:
       'Ola! Sou o seu **Assistente Virtual**. Vou analisar sua carteira e propor ajustes para maximizar ganhos mantendo o seu perfil moderado.',
-  },
-  {
-    id: '2',
-    role: 'assistant',
-    content: `**Resumo do dia**
-      - Carteira +1,8% com destaque para tecnologia.
-      - Setor financeiro esta lateral; bom momento para rebalancear.
-      - Fundos imobiliarios rendendo **0,9%** ao mes, dentro da media.`,
   },
 ]
 
@@ -152,25 +150,26 @@ export default function RecommendationsPage() {
     const assistantMessage: Message = {
       id: `${Date.now()}-assistant`,
       role: 'assistant',
-      content: String(generateAssistantReply(trimmed)),
+      content:
+        'Atualmente a função de chat está em desenvolvimento. Tente novamente mais tarde.',
     }
 
     setMessages((prev) => [assistantMessage, userMessage, ...prev])
     setInput('')
   }
-  if (!input) {
-    return (
-      <Container style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <Card>
-          <Text variant="title">Recomendacoes</Text>
-          <Text style={{ textAlign: 'center', lineHeight: 20 }}>
-            Em breve voce vera aqui sugestoes personalizadas do assistente para
-            ajustar sua carteira com base no seu perfil de risco e objetivos.
-          </Text>
-        </Card>
-      </Container>
-    )
-  }
+  // if (!input) {
+  //   return (
+  //     <Container style={{ justifyContent: 'center', alignItems: 'center' }}>
+  //       <Card>
+  //         <Text variant="title">Recomendacoes</Text>
+  //         <Text style={{ textAlign: 'center', lineHeight: 20 }}>
+  //           Em breve voce vera aqui sugestoes personalizadas do assistente para
+  //           ajustar sua carteira com base no seu perfil de risco e objetivos.
+  //         </Text>
+  //       </Card>
+  //     </Container>
+  //   )
+  // }
   return (
     <Container
       style={{
@@ -263,30 +262,6 @@ export default function RecommendationsPage() {
       </KeyboardAvoidingView>
     </Container>
   )
-}
-
-function generateAssistantReply(question: string) {
-  const lower = question.toLowerCase()
-  if (lower.includes('renda fixa') || lower.includes('tesouro')) {
-    return `**Sugestao conservadora**
-      - Reforcar Tesouro IPCA+ 2030 com +3% da carteira.
-      - Justificativa: protege contra inflacao projetada de **4,2%** e mantem liquidez moderada.`
-  }
-  if (lower.includes('tecnologia') || lower.includes('tech')) {
-    return `**Ajuste em tecnologia**
-      - Limitar exposicao a 28% do portfolio.
-      - Sugestao: vender 5% de TECH11 e migrar para ETF global.
-      - Justificativa: reduzir correlacao com Ibovespa e diversificar receita em dolar.`
-  }
-  if (lower.includes('perfil') || lower.includes('risco')) {
-    return `**Perfil moderado detectado**
-      - Alocacao ideal: 45% renda fixa, 35% acoes, 10% multimercado, 10% alternativos.
-      - Proximo passo: simular rebalanceamento automatico no botao "Simular Cenarios".`
-  }
-  return `**Analise rapida**
-    - Sugiro revisar ativos com desempenho abaixo de **-2%** no ultimo mes.
-    - Podemos buscar oportunidades em setores defensivos (utilities/saude).
-    - Se quiser, pergunte por um ativo especifico que eu explico a tese.`
 }
 
 const styles = StyleSheet.create({

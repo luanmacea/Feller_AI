@@ -124,7 +124,7 @@ export default function HomePage() {
     [isDark],
   )
 
-  const recommendationTarget = '/(app)/recommendations'
+  const recommendationTarget = '/(app)/virtual-assistant'
   const handleSelectStock = (stock: TopStockItem) => {
     if (stock.id) {
       router.push({
@@ -301,11 +301,11 @@ export default function HomePage() {
           onPress={() => router.push(recommendationTarget)}
         >
           <Card
-            style={styles.recommendationsWrapper}
+            style={styles.virtualAssistantWrapper}
             gradientColors={['#D1A954', '#F2C572']}
-            contentStyle={styles.recommendationsButton}
+            contentStyle={styles.virtualAssistantButton}
           >
-            <Text style={styles.recommendationsText}>Ver Recomendacoes</Text>
+            <Text style={styles.virtualAssistantText}>Ver Recomendacoes</Text>
             <Feather name="arrow-right" size={20} color="#241B0D" />
           </Card>
         </TouchableOpacity>
@@ -453,12 +453,12 @@ const styles = StyleSheet.create({
     width: 4,
     borderRadius: 4,
   },
-  recommendationsWrapper: {
+  virtualAssistantWrapper: {
     borderWidth: 0,
     shadowOpacity: 0,
     elevation: 0,
   },
-  recommendationsButton: {
+  virtualAssistantButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 18,
   },
-  recommendationsText: {
+  virtualAssistantText: {
     color: '#241B0D',
     fontSize: 16,
     fontWeight: '600',

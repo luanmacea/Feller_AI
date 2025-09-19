@@ -54,7 +54,7 @@ export default function InvestmentDetailsPage() {
 
   const handleTalk = () => {
     router.push({
-      pathname: '/(app)/recommendations',
+      pathname: '/(app)/virtual-assistant',
       params: { assetId: investment.id },
     })
   }

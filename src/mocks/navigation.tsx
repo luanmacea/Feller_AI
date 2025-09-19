@@ -35,7 +35,7 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     headerBackVisible: true,
     showInFooter: false,
     isApp: false,
-    icon: <MaterialIcons name="insights" size={24} color="black" />,
+    icon: <MaterialIcons name="insights" size={24} color="grey" />,
   },
   'profile/index': {
     title: 'Perfil',
@@ -53,8 +53,8 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: true,
     icon: <Feather name="dollar-sign" size={24} color="grey" />,
   },
-  'recommendations/index': {
-    title: 'Recomendacoes',
+  'virtual-assistant/index': {
+    title: 'Assistente Virtual',
     headerShown: true,
     headerBackVisible: true,
     showInFooter: false,
