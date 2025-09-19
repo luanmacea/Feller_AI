@@ -61,7 +61,7 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: true,
     icon: <Feather name="shield" size={24} color="grey" />,
   },
-  'recommendations/index': {
+  'virtual-assistant/index': {
     title: 'Assistente Virtual',
     headerShown: true,
     headerBackVisible: true,
