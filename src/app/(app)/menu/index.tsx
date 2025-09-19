@@ -198,7 +198,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     gap: 12,
-    paddingTop: 8,
   },
   themeRow: {
     flexDirection: 'row',
