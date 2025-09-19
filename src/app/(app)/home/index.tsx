@@ -1,5 +1,11 @@
 import { useMemo } from 'react'
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -107,9 +113,11 @@ export default function HomePage() {
               {displayName}
             </Text>
           </View>
-          <View style={styles.avatarWrapper}>
-            <Feather name="user" size={22} color="#f5e3b4" />
-          </View>
+          <Image
+            source={{ uri: user?.avatarUrl }}
+            style={styles.avatarWrapper}
+            resizeMode="cover"
+          />
         </View>
 
         <LinearGradient
