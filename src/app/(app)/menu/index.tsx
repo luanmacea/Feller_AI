@@ -36,7 +36,7 @@ export default function MenuPage() {
         contentContainerStyle={styles.list}
         renderItem={({ item: [route, options] }) => (
           <Pressable onPress={() => handleNavigate(route)}>
-            <Card style={styles.menuItem}>
+            <Card variant="flat" style={styles.menuItem}>
               <View style={styles.icon}>{options.icon}</View>
               <View>
                 <Text>{options.title}</Text>
@@ -46,7 +46,7 @@ export default function MenuPage() {
         )}
         ListFooterComponent={
           <Pressable onPress={() => handleLogout()}>
-            <Card style={styles.menuItem}>
+            <Card variant="flat" style={styles.menuItem}>
               <View style={styles.icon}>
                 <Feather name="log-out" size={24} color="grey" />
               </View>
