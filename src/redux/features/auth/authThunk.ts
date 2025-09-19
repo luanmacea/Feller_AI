@@ -14,6 +14,7 @@ interface ISignUpProps {
   cpf: string
   email: string
   password: string
+  avatarUrl?: string
 }
 
 interface IChangePasswordProps {
@@ -60,11 +61,14 @@ export const signUp = createAsyncThunk(
         return rejectWithValue('Este CPF ja esta cadastrado.')
       }
 
+      const avatarUrl = data.avatarUrl?.trim()
+
       const newUser = {
         name: data.name,
         cpf,
         email: data.email,
         password: data.password,
+        avatarUrl: avatarUrl && avatarUrl.length > 0 ? avatarUrl : undefined,
       }
       const response = await api.post('/users', newUser)
       const user = response.data
@@ -101,6 +105,7 @@ export const verifyCpf = createAsyncThunk(
         name: user.name,
         cpf: user.cpf,
         email: user.email,
+        avatarUrl: user.avatarUrl,
       }
     } catch (error) {
       console.error('Erro ao verificar CPF:', error)
@@ -127,9 +132,13 @@ export const changePassword = createAsyncThunk(
       const updateResponse = await api.patch(`/users/${user.id}`, {
         password: newPassword,
       })
-      await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
+      const updatedUser = { ...user, ...updateResponse.data }
+      await AsyncStorage.setItem(
+        LocalStore.USER_DATA,
+        JSON.stringify(updatedUser),
+      )
 
-      return updateResponse.data
+      return updatedUser
     } catch (error: any) {
       const message =
         error?.response?.data?.message || 'Erro ao alterar a senha.'

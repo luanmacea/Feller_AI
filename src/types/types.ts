@@ -16,6 +16,7 @@ export interface IUser {
   name: string
   cpf: string
   email: string
+  avatarUrl?: string
 }
 
 export interface MonthlyReport {

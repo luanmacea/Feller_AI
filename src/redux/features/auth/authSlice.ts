@@ -137,12 +137,7 @@ export const authSlice = createSlice({
       state.isLoading = true
     })
     builder.addCase(logOut.fulfilled, (state) => {
-      state.user = {
-        id: '',
-        name: '',
-        cpf: '',
-        email: '',
-      }
+      state.user = undefined
       state.isLoading = false
       state.isAuthenticated = false
       state.error = ''

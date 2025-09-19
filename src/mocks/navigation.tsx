@@ -37,6 +37,14 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: false,
     icon: <MaterialIcons name="insights" size={24} color="black" />,
   },
+  'profile/index': {
+    title: 'Perfil',
+    headerShown: true,
+    headerBackVisible: true,
+    showInFooter: false,
+    isApp: true,
+    icon: <Feather name="user" size={24} color="grey" />,
+  },
   'wallet/index': {
     title: 'Carteira',
     headerShown: true,
