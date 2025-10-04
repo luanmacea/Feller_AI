@@ -34,14 +34,12 @@ export const authSlice = createSlice({
       state.isAuthenticated = false
     })
     builder.addCase(signIn.fulfilled, (state, action) => {
-      console.log('succe')
       const { token } = action.payload
       SecureStore.setItemAsync(LocalStore.ACCESS_TOKEN, JSON.stringify(token))
       state.isLoading = false
       state.isAuthenticated = true
     })
-    builder.addCase(signIn.rejected, (state, action) => {
-      console.log('eerr', action)
+    builder.addCase(signIn.rejected, (state) => {
       state.isLoading = false
       state.isAuthenticated = false
       state.user = undefined

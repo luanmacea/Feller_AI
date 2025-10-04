@@ -7,9 +7,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
+      const data = error.response.data
       const errorResponse = {
-        message: error.response.data.message,
-        errors: error.response.data.errors,
+        message: data.message || data.error || 'Erro desconhecido',
+        errors: data.errors,
       }
       if (error.response.status === 500) {
         store.dispatch(
