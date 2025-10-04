@@ -1,44 +1,114 @@
-import { useMemo } from 'react'
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { useEffect, useMemo, useState } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 
 import Card from '@/components/Card'
 import Container from '@/components/Container'
+import { Loading } from '@/components/Loading'
 import Text from '@/components/Text'
-import { investmentDetails } from '@/mocks/investmentMocks'
-import { selectThemeState } from '@/redux/features/theme/themeSelectors'
-import { useAppSelector } from '@/redux/hook'
+import { fetchInvestmentById } from '@/services/investments'
+import type { InvestmentDetails } from '@/types/types'
+import { formatDateTimeToBR } from '@/utils/formatValues'
 
-interface TrendPoint {
-  label: string
-  value: number
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+})
+
+const formatCurrency = (value?: number) => currencyFormatter.format(value ?? 0)
+
+const formatPercentage = (value?: number) => {
+  if (value === undefined || Number.isNaN(value)) {
+    return '-'
+  }
+  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
 }
 
-const CHART_HEIGHT = 120
+const categoryIcons: Record<string, keyof typeof Feather.glyphMap> = {
+  RENDA_FIXA: 'shield',
+  RENDA_VARIAVEL: 'trending-up',
+  FUNDO_IMOBILIARIO: 'home',
+  FUNDO: 'layers',
+  CRIPTO: 'cpu',
+  OUTROS: 'briefcase',
+  TESOURO_DIRETO: 'dollar-sign',
+}
 
-const sectorIcons: Record<string, keyof typeof Feather.glyphMap> = {
-  Biotecnologia: 'activity',
-  Financeiro: 'dollar-sign',
-  Energia: 'zap',
-  Logistica: 'truck',
-  Mineracao: 'trending-up',
+const riskLabels: Record<string, string> = {
+  BAIXO: 'Baixo',
+  MEDIO: 'Medio',
+  ALTO: 'Alto',
 }
 
 export default function InvestmentDetailsPage() {
   const router = useRouter()
-  const { id } = useLocalSearchParams()
-  const theme = useAppSelector(selectThemeState)
-  const colors = theme.colors || {}
-  const isDark = theme.mode === 'dark'
+  const params = useLocalSearchParams()
+  const investmentId = Number(params.id)
 
-  const investment = investmentDetails[id as string]
+  const [investment, setInvestment] = useState<InvestmentDetails | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const trendData = useMemo(
-    () => buildTrend(investment?.variation ?? 0),
-    [investment?.variation],
-  )
+  useEffect(() => {
+    if (!Number.isFinite(investmentId)) {
+      setError('Identificador do investimento invalido.')
+      return
+    }
+
+    const loadData = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await fetchInvestmentById(investmentId)
+        setInvestment(response)
+      } catch (err: any) {
+        const message =
+          err?.response?.data?.message ||
+          err?.message ||
+          'Nao foi possivel carregar os dados do investimento.'
+        setError(message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [investmentId])
+
+  const iconName = useMemo(() => {
+    if (!investment?.categoria) {
+      return 'bar-chart-2'
+    }
+    return categoryIcons[investment.categoria] || 'bar-chart-2'
+  }, [investment?.categoria])
+
+  const variation = investment?.variacaoPercentual ?? 0
+  const isPositive = variation >= 0
+
+  const lastUpdate = investment?.ultimaAtualizacaoPreco
+    ? formatDateTimeToBR(investment.ultimaAtualizacaoPreco)
+    : 'Nao informado'
+
+  if (loading) {
+    return (
+      <Container style={styles.centered}>
+        <Loading />
+      </Container>
+    )
+  }
+
+  if (error) {
+    return (
+      <Container style={styles.centered}>
+        <Card style={styles.errorCard}>
+          <Text variant="subtitle">Algo deu errado</Text>
+          <Text>{error}</Text>
+        </Card>
+      </Container>
+    )
+  }
 
   if (!investment) {
     return (
@@ -48,244 +118,139 @@ export default function InvestmentDetailsPage() {
     )
   }
 
-  const isPositive = investment.variation >= 0
-  const sectorIcon = sectorIcons[investment.category] || 'bar-chart'
-  const highlightColor = isPositive ? '#44C18C' : '#E15D6E'
-
-  const handleTalk = () => {
-    router.push({
-      pathname: '/(app)/virtual-assistant',
-      params: { assetId: investment.id },
-    })
-  }
-
   return (
-    <Container
-      style={StyleSheet.flatten([
-        styles.container,
-        { backgroundColor: isDark ? '#0b111d' : '#f5f7fb' },
-      ])}
-    >
+    <Container>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={styles.content}
       >
-        <Card
-          variant="flat"
-          style={styles.headerCard}
-          contentStyle={StyleSheet.flatten([
-            styles.headerContent,
-            { backgroundColor: isDark ? '#131b2d' : '#dfe7f7' },
-          ])}
-        >
-          <View
-            style={StyleSheet.flatten([
-              styles.headerIcon,
-              { backgroundColor: isDark ? '#1e2940' : '#c8d6ef' },
-            ])}
-          >
-            <Feather
-              name={sectorIcon}
-              size={22}
-              color={isDark ? '#dce6ff' : '#1c3259'}
-            />
+        <Card style={styles.headerCard}>
+          <View style={styles.headerIcon}>
+            <Feather name={iconName} size={28} color="#1c3259" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.headerTitle]}>{investment.name}</Text>
-            <Text style={[styles.headerSubtitle]}>
-              Investimento do setor {investment.category}
+            <Text variant="title" style={styles.headerTitle}>
+              {investment.nome}
             </Text>
-            <Text style={[styles.headerDescription]}>
-              _{investment.description}_
+            <Text variant="caption">{investment.simbolo}</Text>
+            <Text style={styles.headerSubtitle}>
+              Categoria: {investment.categoria || 'Nao informado'}
             </Text>
           </View>
         </Card>
 
-        <Card contentStyle={styles.metricsCard}>
-          <View style={styles.metricsRow}>
-            <MetricBlock
-              label="Valor atual"
-              value={formatCurrency(investment.value)}
-              color={colors.grey2 || '#f4f7ff'}
-            />
-            <MetricBlock
-              label="Variacao"
-              value={`${isPositive ? '+' : ''}${investment.variation.toFixed(1)}%`}
-              color={highlightColor}
-              icon={isPositive ? 'trending-up' : 'trending-down'}
-            />
-          </View>
-          <View style={styles.metricsRow}>
-            <MetricBlock
-              label="Ultima atualizacao"
-              value={investment.lastUpdate}
-              color={colors.grey2 || '#7b8faa'}
-            />
-            <MetricBlock
-              label="Dividend yield"
-              value={`${investment.dividendYield.toFixed(1)}%`}
-              color={colors.grey2 || '#7b8faa'}
-            />
-          </View>
-        </Card>
-
-        <Card
-          variant="flat"
-          style={styles.chartCard}
-          contentStyle={StyleSheet.flatten([
-            styles.chartContent,
-            { backgroundColor: isDark ? '#111827' : '#ffffff' },
-          ])}
-        >
-          <Text
-            style={[styles.sectionTitle, { color: colors.grey1 || '#1f2a3d' }]}
-          >
-            Variacao recente
+        <Card style={styles.card}>
+          <Text variant="subtitle" style={styles.sectionTitle}>
+            Panorama geral
           </Text>
-          <TrendSparkline data={trendData} color={highlightColor} />
-          <View style={styles.trendLabels}>
-            {trendData.map((point) => (
-              <Text
-                key={point.label}
-                style={[
-                  styles.trendLabel,
-                  { color: colors.grey2 || '#6f819f' },
-                ]}
-              >
-                {point.label}
-              </Text>
-            ))}
-          </View>
-        </Card>
-
-        <Pressable onPress={handleTalk} style={{ marginTop: 16 }}>
-          <Card
-            style={styles.ctaCard}
-            gradientColors={['#2f60ff', '#4c87ff']}
-            contentStyle={styles.ctaContent}
-          >
-            <View style={{ width: '90%' }}>
-              <Text style={styles.ctaTitle}>
-                Conversar com Assistente sobre este ativo
-              </Text>
-              <Text style={styles.ctaSubtitle}>
-                Receba orientacoes personalizadas, tese de investimento e riscos
+          <View style={styles.metricsRow}>
+            <View style={styles.metricBlock}>
+              <Text variant="caption">Preco atual</Text>
+              <Text style={styles.metricValue}>
+                {formatCurrency(investment.precoAtual)}
               </Text>
             </View>
-            <Feather name="message-circle" size={20} color="#f4f7ff" />
-          </Card>
-        </Pressable>
+            <View style={styles.metricBlock}>
+              <Text variant="caption">Variacao</Text>
+              <Text
+                style={[
+                  styles.metricValue,
+                  isPositive ? styles.positive : styles.negative,
+                ]}
+              >
+                {formatPercentage(variation)}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.metricsRow}>
+            <View style={styles.metricBlock}>
+              <Text variant="caption">Dividend yield</Text>
+              <Text style={styles.metricValue}>
+                {investment.dividendYield !== undefined
+                  ? formatPercentage(investment.dividendYield)
+                  : 'Nao informado'}
+              </Text>
+            </View>
+            <View style={styles.metricBlock}>
+              <Text variant="caption">Atualizado em</Text>
+              <Text style={styles.metricValue}>{lastUpdate}</Text>
+            </View>
+          </View>
+        </Card>
+
+        <Card style={styles.card}>
+          <Text variant="subtitle" style={styles.sectionTitle}>
+            Detalhes
+          </Text>
+          <View style={styles.detailRow}>
+            <Text variant="caption">Risco</Text>
+            <Text>{riskLabels[investment.risco || ''] || 'Nao informado'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text variant="caption">Liquidez</Text>
+            <Text>{investment.liquidez || 'Nao informado'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text variant="caption">Quantidade disponivel</Text>
+            <Text>{investment.quantidadeDisponivel ?? 'Nao informado'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text variant="caption">Descricao</Text>
+            <Text style={styles.description}>
+              {investment.descricao || 'Nao ha descricao cadastrada.'}
+            </Text>
+          </View>
+        </Card>
+
+        <Card style={styles.card}>
+          <Text variant="subtitle" style={styles.sectionTitle}>
+            Precisa de ajuda?
+          </Text>
+          <Text style={{ marginBottom: 12 }}>
+            Chame o assistente virtual para analisar como este ativo se encaixa
+            na sua carteira.
+          </Text>
+          <View style={styles.ctaButton}>
+            <Feather name="message-square" size={18} color="#fff" />
+            <Text
+              style={styles.ctaText}
+              onPress={() =>
+                router.push({
+                  pathname: '/(app)/virtual-assistant',
+                  params: { assetId: investment.id },
+                })
+              }
+            >
+              Falar com o assistente
+            </Text>
+          </View>
+        </Card>
       </ScrollView>
     </Container>
   )
 }
 
-function formatCurrency(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-}
-
-function buildTrend(variation: number): TrendPoint[] {
-  const points: TrendPoint[] = []
-  let base = 100
-  for (let i = 0; i < 8; i++) {
-    const factor = Math.sin(i * 0.8 + variation / 3) * (variation / 6)
-    base += factor
-    points.push({
-      label: `D-${7 - i}`,
-      value: parseFloat(base.toFixed(2)),
-    })
-  }
-  return points
-}
-
-function TrendSparkline({
-  data,
-  color,
-}: {
-  data: TrendPoint[]
-  color: string
-}) {
-  if (data.length === 0) return null
-  const values = data.map((p) => p.value)
-  const max = Math.max(...values)
-  const min = Math.min(...values)
-  const range = max - min || 1
-
-  return (
-    <View style={styles.sparklineRow}>
-      {data.map((point) => {
-        const normalized = (point.value - min) / range
-        const height = 12 + normalized * 48
-        return (
-          <View key={point.label} style={styles.sparklineColumn}>
-            <View
-              style={[styles.sparklineBar, { height, backgroundColor: color }]}
-            />
-          </View>
-        )
-      })}
-    </View>
-  )
-}
-
-function MetricBlock({
-  label,
-  value,
-  color,
-  icon,
-}: {
-  label: string
-  value: string
-  color: string
-  icon?: keyof typeof Feather.glyphMap
-}) {
-  return (
-    <View style={styles.metricBlock}>
-      <Text style={[styles.metricLabel, { color: '#7b8faa' }]}>{label}</Text>
-      <View style={styles.metricValueRow}>
-        {icon && (
-          <View
-            style={[
-              styles.metricIconWrapper,
-              { backgroundColor: `${color}22` },
-            ]}
-          >
-            <Feather name={icon} size={16} color={color} />
-          </View>
-        )}
-        <Text style={[styles.metricValue, { color }]}>{value}</Text>
-      </View>
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 0,
-  },
   centered: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    gap: 16,
+    paddingBottom: 32,
   },
   headerCard: {
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-    backgroundColor: 'transparent',
-    marginBottom: 16,
-  },
-  headerContent: {
     flexDirection: 'row',
-    gap: 16,
-    padding: 20,
-    borderRadius: 24,
     alignItems: 'center',
+    gap: 16,
+    paddingVertical: 20,
   },
   headerIcon: {
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     borderRadius: 16,
+    backgroundColor: '#dfe7f7',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -295,16 +260,13 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 13,
-    marginBottom: 6,
+    marginTop: 4,
   },
-  headerDescription: {
-    fontStyle: 'italic',
-    fontSize: 13,
-  },
-  metricsCard: {
+  card: {
     gap: 16,
-    padding: 20,
-    borderRadius: 24,
+  },
+  sectionTitle: {
+    fontWeight: '600',
   },
   metricsRow: {
     flexDirection: 'row',
@@ -312,106 +274,39 @@ const styles = StyleSheet.create({
   },
   metricBlock: {
     flex: 1,
-    gap: 10,
-  },
-  metricLabel: {
-    fontSize: 12,
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-  },
-  metricValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  metricIconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
   },
   metricValue: {
     fontSize: 18,
-    fontWeight: '700',
-  },
-  chartCard: {
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-    backgroundColor: 'transparent',
-    marginTop: 16,
-  },
-  chartContent: {
-    borderRadius: 24,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    gap: 16,
-  },
-  chart: {
-    height: CHART_HEIGHT,
-    borderRadius: 18,
-    borderWidth: 1,
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 4,
-    paddingBottom: 8,
-  },
-  chartContentOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  chartLine: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  sparklineRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: CHART_HEIGHT,
-    gap: 6,
-  },
-  sparklineColumn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  sparklineBar: {
-    width: 8,
-    borderRadius: 6,
-  },
-  sectionTitle: {
-    fontSize: 16,
     fontWeight: '600',
   },
-  trendLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  positive: {
+    color: '#2E8B57',
   },
-  trendLabel: {
-    fontSize: 11,
+  negative: {
+    color: '#B22222',
   },
-  ctaCard: {
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-    backgroundColor: 'transparent',
+  detailRow: {
+    gap: 4,
   },
-  ctaContent: {
+  description: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  errorCard: {
+    gap: 8,
+  },
+  ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    borderRadius: 22,
-    gap: 12,
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#1c3259',
+    paddingVertical: 12,
+    borderRadius: 12,
   },
-  ctaTitle: {
-    color: '#f4f7ff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  ctaSubtitle: {
-    color: '#dce6ff',
-    fontSize: 13,
-    marginTop: 4,
+  ctaText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 })

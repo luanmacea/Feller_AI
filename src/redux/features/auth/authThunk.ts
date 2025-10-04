@@ -1,147 +1,207 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createAsyncThunk } from '@reduxjs/toolkit'
+import type { AxiosError } from 'axios'
 
 import { LocalStore } from '@/constants/environment-variables'
-import api from '@/services/api'
+import api, { setAuthorizationHeader } from '@/services/api'
+import type {
+  InvestorProfileType,
+  LoginResponse,
+  UsuarioResponse,
+} from '@/types/apiTypes'
+import type { IUser } from '@/types/types'
 
-interface ISignInProps {
-  cpf: string
-  password: string
-}
-
-interface ISignUpProps {
-  name: string
-  cpf: string
+interface SignInPayload {
   email: string
   password: string
-  avatarUrl?: string
 }
 
-interface IChangePasswordProps {
+interface SignUpPayload {
+  nomeUsuario: string
+  email: string
+  cpf: string
+  password: string
+  dtNascimento: string
+  tipo?: InvestorProfileType
+}
+
+interface ResetPasswordPayload {
   cpf: string
   newPassword: string
 }
 
+export interface AuthSuccessPayload {
+  token: string
+  user: IUser
+}
+
+type ApiErrorPayload = {
+  mensagem?: string
+  mensagemErro?: string
+  mensagemRetorno?: string
+  mensaje?: string
+  erro?: string
+  error?: string
+  message?: string
+  errors?: Array<{ message?: string; mensagem?: string }>
+}
+
+const stripNonDigits = (value: string | number) =>
+  value?.toString().replace(/\D/g, '') || ''
+
+const normaliseCpfString = (value: string | number) =>
+  stripNonDigits(value).padStart(11, '0')
+
+const parseApiError = (error: unknown, fallback: string) => {
+  const axiosError = error as AxiosError<ApiErrorPayload>
+
+  if (axiosError?.response?.data) {
+    const data = axiosError.response.data
+
+    if (Array.isArray(data.errors) && data.errors.length > 0) {
+      const nested = data.errors.find((item) => item?.message || item?.mensagem)
+      if (nested?.message) {
+        return nested.message
+      }
+      if (nested?.mensagem) {
+        return nested.mensagem
+      }
+    }
+
+    return (
+      data.message ||
+      data.mensagem ||
+      data.mensagemErro ||
+      data.mensagemRetorno ||
+      data.erro ||
+      data.mensaje ||
+      data.error ||
+      fallback
+    )
+  }
+
+  if (axiosError?.message) {
+    return axiosError.message
+  }
+
+  return fallback
+}
+
+const mapUsuarioToUser = (usuario: UsuarioResponse): IUser => ({
+  ...usuario,
+  cpf: normaliseCpfString(usuario.cpf),
+  nomePreferencial: usuario.nomeUsuario.split(' ')[0] || usuario.nomeUsuario,
+})
+
+const persistSession = async ({ token, user }: AuthSuccessPayload) => {
+  setAuthorizationHeader(token)
+  await AsyncStorage.multiSet([
+    [LocalStore.ACCESS_TOKEN, token],
+    [LocalStore.USER_DATA, JSON.stringify(user)],
+  ])
+}
+
+const authenticateUser = async (
+  payload: SignInPayload,
+): Promise<AuthSuccessPayload> => {
+  const loginResponse = await api.post<LoginResponse>('/usuarios/login', {
+    email: payload.email,
+    senha: payload.password,
+  })
+
+  const { token, userId } = loginResponse.data
+
+  setAuthorizationHeader(token)
+
+  const userResponse = await api.get<UsuarioResponse>(`/usuarios/${userId}`)
+  const user = mapUsuarioToUser(userResponse.data)
+
+  await persistSession({ token, user })
+
+  return { token, user }
+}
+
 export const signIn = createAsyncThunk(
   'auth/signIn',
-  async (data: ISignInProps, { rejectWithValue }) => {
+  async (data: SignInPayload, { rejectWithValue }) => {
     try {
-      const response = await api.get('/users', {
-        params: {
-          ...data,
-        },
-      })
-
-      if (response.data[0]?.id) {
-        const user = response.data[0]
-        await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
-        return response.data
-      }
-
-      return rejectWithValue('CPF ou senha incorretos.')
+      const session = await authenticateUser(data)
+      return session
     } catch (error) {
-      console.error('Erro ao fazer login:', error)
-      return rejectWithValue('Erro ao fazer login.')
+      const message = parseApiError(error, 'Email ou senha incorretos.')
+      return rejectWithValue(message)
     }
   },
 )
 
 export const signUp = createAsyncThunk(
   'auth/signUp',
-  async (data: ISignUpProps, { rejectWithValue }) => {
+  async (data: SignUpPayload, { rejectWithValue }) => {
     try {
-      const { cpf } = data
-
-      const existingUsersResponse = await api.get('/users', {
-        params: { cpf },
-      })
-      const existingUsers = existingUsersResponse.data
-
-      if (existingUsers.length > 0) {
-        return rejectWithValue('Este CPF ja esta cadastrado.')
+      const cpfDigits = stripNonDigits(data.cpf)
+      if (!cpfDigits) {
+        throw new Error('CPF invalido')
       }
 
-      const avatarUrl = data.avatarUrl?.trim()
+      const payload: {
+        nomeUsuario: string
+        email: string
+        senha: string
+        cpf: number
+        dt_nascimento: string
+        tipo?: InvestorProfileType
+      } = {
+        nomeUsuario: data.nomeUsuario.trim(),
+        email: data.email.trim().toLowerCase(),
+        senha: data.password,
+        cpf: Number(cpfDigits),
+        dt_nascimento: data.dtNascimento,
+      }
 
-      const newUser = {
-        name: data.name,
-        cpf,
+      if (data.tipo) {
+        payload.tipo = data.tipo
+      }
+
+      await api.post('/usuarios/criar', payload)
+
+      const session = await authenticateUser({
         email: data.email,
         password: data.password,
-        avatarUrl: avatarUrl && avatarUrl.length > 0 ? avatarUrl : undefined,
-      }
-      const response = await api.post('/users', newUser)
-      const user = response.data
-      await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
-      return response.data
+      })
+
+      return session
     } catch (error) {
-      console.error('Erro ao cadastrar o usuario:', error)
-      return rejectWithValue('Erro ao cadastrar o usuario.')
+      const message = parseApiError(error, 'Erro ao criar usuario.')
+      return rejectWithValue(message)
     }
   },
 )
 
 export const logOut = createAsyncThunk('auth/logOut', async () => {
-  await AsyncStorage.removeItem(LocalStore.USER_DATA)
+  await AsyncStorage.multiRemove([
+    LocalStore.ACCESS_TOKEN,
+    LocalStore.USER_DATA,
+  ])
+  setAuthorizationHeader()
 })
-
-export const verifyCpf = createAsyncThunk(
-  'auth/verifyCpf',
-  async ({ cpf }: { cpf: string }, { rejectWithValue }) => {
-    try {
-      const response = await api.get('/users', {
-        params: { cpf },
-      })
-      const users = response.data
-
-      if (!Array.isArray(users) || users.length === 0) {
-        return rejectWithValue('CPF nao encontrado.')
-      }
-
-      const user = users[0]
-
-      return {
-        id: user.id,
-        name: user.name,
-        cpf: user.cpf,
-        email: user.email,
-        avatarUrl: user.avatarUrl,
-      }
-    } catch (error) {
-      console.error('Erro ao verificar CPF:', error)
-      return rejectWithValue('Erro ao verificar CPF.')
-    }
-  },
-)
 
 export const changePassword = createAsyncThunk(
   'auth/changePassword',
-  async ({ cpf, newPassword }: IChangePasswordProps, { rejectWithValue }) => {
+  async ({ cpf, newPassword }: ResetPasswordPayload, { rejectWithValue }) => {
     try {
-      const findResponse = await api.get('/users', {
-        params: { cpf },
-      })
-
-      const users = findResponse.data
-
-      if (!Array.isArray(users) || users.length === 0) {
-        return rejectWithValue('CPF nao encontrado.')
+      const cpfDigits = stripNonDigits(cpf)
+      if (!cpfDigits) {
+        throw new Error('CPF invalido')
       }
 
-      const user = users[0]
-      const updateResponse = await api.patch(`/users/${user.id}`, {
-        password: newPassword,
+      const response = await api.post('/usuarios/criar-senha', {
+        cpf: Number(cpfDigits),
+        senhaNova: newPassword,
       })
-      const updatedUser = { ...user, ...updateResponse.data }
-      await AsyncStorage.setItem(
-        LocalStore.USER_DATA,
-        JSON.stringify(updatedUser),
-      )
 
-      return updatedUser
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message || 'Erro ao alterar a senha.'
+      return response.data
+    } catch (error) {
+      const message = parseApiError(error, 'Erro ao redefinir a senha.')
       return rejectWithValue(message)
     }
   },

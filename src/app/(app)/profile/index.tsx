@@ -13,26 +13,53 @@ interface InfoItem {
   value: string
 }
 
+const formatCpf = (cpf?: string | number) => {
+  if (!cpf) {
+    return 'Nao informado'
+  }
+
+  const digits = cpf.toString().replace(/\D/g, '')
+  if (digits.length !== 11) {
+    return digits
+  }
+
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`
+}
+
 export default function ProfilePage() {
   const user = useAppSelector(selectUser)
   const theme = useAppSelector(selectThemeState)
 
-  const avatarLetter = useMemo(() => {
-    if (!user?.name) {
-      return '?'
+  const displayName = useMemo(() => {
+    const base = user?.nomePreferencial || user?.nomeUsuario
+    if (!base) {
+      return 'Investidor'
     }
-    return user.name.charAt(0).toUpperCase()
-  }, [user?.name])
+    return base
+  }, [user?.nomePreferencial, user?.nomeUsuario])
+
+  const avatarLetter = useMemo(
+    () => displayName.charAt(0).toUpperCase(),
+    [displayName],
+  )
 
   const hasAvatar = Boolean(user?.avatarUrl && user.avatarUrl.trim().length > 0)
 
   const info: InfoItem[] = useMemo(
     () => [
-      { label: 'Nome completo', value: user?.name || 'Nao informado' },
-      { label: 'CPF', value: user?.cpf || 'Nao informado' },
+      { label: 'Nome completo', value: user?.nomeUsuario || 'Nao informado' },
+      { label: 'CPF', value: formatCpf(user?.cpf) },
       { label: 'E-mail', value: user?.email || 'Nao informado' },
+      {
+        label: 'Perfil de investidor',
+        value: user?.tipo || 'Nao informado',
+      },
+      {
+        label: 'Status',
+        value: user?.userIsActive ? 'Ativo' : 'Inativo',
+      },
     ],
-    [user?.cpf, user?.email, user?.name],
+    [user?.cpf, user?.email, user?.nomeUsuario, user?.tipo, user?.userIsActive],
   )
 
   return (
@@ -57,8 +84,10 @@ export default function ProfilePage() {
           </View>
         )}
         <View>
-          <Text variant="title">{user?.name || 'Usuario'}</Text>
-          <Text variant="caption">Conta ativa</Text>
+          <Text variant="title">{displayName}</Text>
+          <Text variant="caption">
+            {user?.role?.replace('ROLE_', '') || 'Usuario'} ativo
+          </Text>
         </View>
       </View>
 

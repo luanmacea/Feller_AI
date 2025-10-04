@@ -1,65 +1,89 @@
-import { useMemo } from 'react'
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
-import { useRouter } from 'expo-router'
 
 import Card from '@/components/Card'
 import Container from '@/components/Container'
+import { Loading } from '@/components/Loading'
 import Text from '@/components/Text'
-import { investmentDetails, summary, walletMock } from '@/mocks/investmentMocks'
 import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
+import {
+  fetchWalletPositions,
+  fetchWalletStatement,
+  fetchWalletSummary,
+} from '@/services/portfolio'
+import type {
+  WalletPosition,
+  WalletStatementEntry,
+  WalletSummary,
+} from '@/types/types'
+import { formatDateTimeToBR } from '@/utils/formatValues'
 
-interface SparklineProps {
-  data: number[]
-  color: string
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+})
+
+const formatCurrency = (value?: number) => currencyFormatter.format(value ?? 0)
+
+const formatPercentage = (value?: number) => {
+  if (value === undefined || Number.isNaN(value)) {
+    return '-'
+  }
+  const formatted = value.toFixed(2)
+  return `${value >= 0 ? '+' : ''}${formatted}%`
 }
 
-interface TopStockItem {
-  id?: string
-  name: string
-  variation: number
-  isPositive: boolean
-  series: number[]
+const getTransactionLabel = (type?: string) => {
+  switch (type) {
+    case 'COMPRA_ACAO':
+      return 'Compra de acao'
+    case 'VENDA_ACAO':
+      return 'Venda de acao'
+    case 'DIVIDENDO_RECEBIDO':
+      return 'Dividendo recebido'
+    case 'DEPOSITO':
+      return 'Deposito'
+    case 'SAQUE':
+      return 'Saque'
+    default:
+      return type || 'Operacao'
+  }
 }
 
-function Sparkline({ data, color }: SparklineProps) {
-  const max = Math.max(...data)
-  const min = Math.min(...data)
-  const range = max - min || 1
-
-  return (
-    <View style={styles.sparkline}>
-      {data.map((value, index) => {
-        const normalized = (value - min) / range
-        const height = 12 + normalized * 28
-        return (
-          <View key={`${value}-${index}`} style={styles.sparklineColumn}>
-            <View
-              style={[styles.sparklineBar, { height, backgroundColor: color }]}
-            />
-          </View>
-        )
-      })}
-    </View>
-  )
+const getTransactionSign = (type?: string) => {
+  switch (type) {
+    case 'VENDA_ACAO':
+    case 'DIVIDENDO_RECEBIDO':
+    case 'DEPOSITO':
+      return 1
+    case 'COMPRA_ACAO':
+    case 'SAQUE':
+      return -1
+    default:
+      return 0
+  }
 }
 
 export default function HomePage() {
-  const router = useRouter()
-  const user = useAppSelector(selectUser)
   const theme = useAppSelector(selectThemeState)
+  const user = useAppSelector(selectUser)
 
-  const colors = theme.colors || {}
-  const isDark = theme.mode === 'dark'
+  const [summary, setSummary] = useState<WalletSummary | null>(null)
+  const [positions, setPositions] = useState<WalletPosition[]>([])
+  const [statement, setStatement] = useState<WalletStatementEntry[]>([])
+  const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const displayName = useMemo(() => {
+    const base = user?.nomePreferencial || user?.nomeUsuario
+    if (!base) return 'Investidor'
+    return base.split(' ')[0]
+  }, [user?.nomePreferencial, user?.nomeUsuario])
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours()
@@ -68,411 +92,346 @@ export default function HomePage() {
     return 'Boa noite'
   }, [])
 
-  const displayName = user?.name?.split(' ')[0] || 'Investidor'
+  const loadData = useCallback(async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true)
+    } else {
+      setLoading(true)
+    }
+    setError(null)
 
-  const balance = walletMock.balance
-  const balanceFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }),
-    [],
-  )
-  const formattedBalance = balanceFormatter.format(balance)
-  const portfolioVariation = summary.portfolioChange
+    try {
+      const [summaryData, positionsData, statementData] = await Promise.all([
+        fetchWalletSummary(),
+        fetchWalletPositions(),
+        fetchWalletStatement(),
+      ])
 
-  const highlightBackground = useMemo(
-    () => (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(17, 17, 24, 0.06)'),
-    [isDark],
-  )
-
-  const topStocks: TopStockItem[] = useMemo(() => {
-    const baseStocks = [...summary.actives, ...summary.negatives]
-    const details = Object.values(investmentDetails)
-
-    return baseStocks.map((item, index) => {
-      const direction = item.isPositive ? 1 : -1
-      const amplitude = Math.max(Math.abs(item.variation) * 2, 4)
-      const match = details.find((detail) => detail.name === item.name)
-
-      const series = Array.from({ length: 8 }, (_, idx) => {
-        const trend = direction * idx * (Math.abs(item.variation) / 3)
-        const wave = Math.sin((idx + 1) * 0.8 + index) * amplitude * 0.2
-        const base = item.isPositive ? 50 : 58
-        return base + trend + wave
-      })
-
-      return {
-        id: match?.id,
-        name: item.name,
-        variation: item.variation,
-        isPositive: item.isPositive,
-        series,
+      setSummary(summaryData)
+      setPositions(positionsData)
+      setStatement(statementData.slice(0, 5))
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Nao foi possivel carregar os dados da carteira.'
+      setError(message)
+    } finally {
+      if (isRefresh) {
+        setRefreshing(false)
+      } else {
+        setLoading(false)
       }
-    })
+    }
   }, [])
 
-  const stockGradients = useMemo(
+  useEffect(() => {
+    loadData(false)
+  }, [loadData])
+
+  const onRefresh = useCallback(() => {
+    loadData(true)
+  }, [loadData])
+
+  const gainers = useMemo(
     () =>
-      isDark
-        ? {
-            positive: ['#21372B', '#16161C'] as [string, string],
-            negative: ['#3A1F1F', '#16161C'] as [string, string],
-          }
-        : {
-            positive: ['#FFFFFF', '#E7F4EE'] as [string, string],
-            negative: ['#FFF6F6', '#F7E8E8'] as [string, string],
-          },
-    [isDark],
+      positions
+        .filter((item) => (item.percentualGanhoPerda ?? 0) > 0)
+        .sort(
+          (a, b) =>
+            (b.percentualGanhoPerda ?? 0) - (a.percentualGanhoPerda ?? 0),
+        )
+        .slice(0, 3),
+    [positions],
   )
 
-  const recommendationTarget = '/(app)/virtual-assistant'
-  const handleSelectStock = (stock: TopStockItem) => {
-    if (stock.id) {
-      router.push({
-        pathname: '/(app)/investmentDetails',
-        params: { id: stock.id },
-      })
-    }
-  }
+  const losers = useMemo(
+    () =>
+      positions
+        .filter((item) => (item.percentualGanhoPerda ?? 0) < 0)
+        .sort(
+          (a, b) =>
+            (a.percentualGanhoPerda ?? 0) - (b.percentualGanhoPerda ?? 0),
+        )
+        .slice(0, 3),
+    [positions],
+  )
 
   return (
     <Container>
       <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors?.primary}
+          />
+        }
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.header}>
           <View>
-            <Text
-              variant="subtitle"
-              style={[styles.headerSubtitle, { color: colors.grey2 }]}
-            >
-              {greeting},
+            <Text variant="caption" style={styles.caption}>
+              {greeting}
             </Text>
-            <Text
-              variant="title"
-              style={[styles.headerTitle, { color: colors.grey1 }]}
-            >
+            <Text variant="title" style={styles.headline}>
               {displayName}
             </Text>
           </View>
-          <Pressable onPress={() => router.push('/(app)/profile')}>
-            <Card
-              variant="flat"
-              style={styles.avatarCard}
-              contentStyle={[
-                styles.avatarContent,
-                { backgroundColor: highlightBackground },
-              ]}
-            >
-              <Feather
-                name="user"
-                size={20}
-                color={colors.primary || '#C99A2E'}
-              />
-            </Card>
-          </Pressable>
+          <Feather name="pie-chart" size={28} color={theme.colors?.primary} />
         </View>
 
-        <Card contentStyle={styles.portfolioCard}>
-          <View style={styles.portfolioHeader}>
-            <Text style={[styles.portfolioLabel]}>Sua carteira</Text>
-            <Card
-              variant="flat"
-              style={styles.portfolioChipWrapper}
-              contentStyle={[
-                styles.portfolioChip,
-                {
-                  backgroundColor:
-                    portfolioVariation >= 0
-                      ? 'rgba(81, 210, 137, 0.16)'
-                      : 'rgba(242, 107, 107, 0.16)',
-                },
-              ]}
-            >
-              <Feather
-                name={portfolioVariation >= 0 ? 'trending-up' : 'trending-down'}
-                size={14}
-                color={
-                  portfolioVariation >= 0
-                    ? theme?.colors?.success || 'green'
-                    : theme?.colors?.error || 'red'
-                }
-              />
-              <Text
-                style={[
-                  styles.portfolioChipText,
-                  {
-                    color:
-                      portfolioVariation >= 0
-                        ? theme?.colors?.success || 'green'
-                        : theme?.colors?.error || 'red',
-                  },
-                ]}
-              >
-                {portfolioVariation.toFixed(1)}%
-              </Text>
-            </Card>
-          </View>
-
-          <Text style={[styles.portfolioValue]}>{formattedBalance}</Text>
-          <Text>Evolucao acumulada nos ultimos 12 meses</Text>
-
-          <View style={styles.portfolioHighlights}>
-            {summary.actives.slice(0, 2).map((item) => (
-              <Card
-                key={item.name}
-                variant="flat"
-                style={styles.highlightCard}
-                contentStyle={[
-                  styles.highlightContent,
-                  { backgroundColor: highlightBackground },
-                ]}
-              >
-                <Text style={[styles.highlightLabel]}>{item.name}</Text>
-                <Text
-                  style={[
-                    styles.highlightValue,
-                    {
-                      color: item.isPositive
-                        ? theme?.colors?.success
-                        : theme?.colors?.error,
-                    },
-                  ]}
-                >
-                  {item.variation > 0 ? '+' : ''}
-                  {item.variation.toFixed(1)}%
-                </Text>
-              </Card>
-            ))}
-          </View>
-        </Card>
-
-        <View style={styles.sectionHeader}>
-          <Text variant="title">Top acoes do dia</Text>
-          <Text>Monitoramos os destaques para voce decidir com confianca</Text>
-          <Text variant="caption">
-            (clique na acao desejada para mais detalhes)
-          </Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.carousel}
-        >
-          {topStocks.map((stock, index) => {
-            const positive = stock.isPositive
-            const gradient = stockGradients[positive ? 'positive' : 'negative']
-            return (
-              <Pressable
-                key={`${stock.name}-${index}`}
-                style={styles.stockPressable}
-                onPress={() => handleSelectStock(stock)}
-              >
-                <Card
-                  style={styles.stockCardWrapper}
-                  contentStyle={styles.stockCardContent}
-                  gradientColors={gradient}
-                >
-                  <View style={styles.stockHeader}>
-                    <Text variant="subtitle">{stock.name}</Text>
-                    <Text
-                      style={[
-                        styles.stockVariation,
-                        {
-                          color: positive
-                            ? theme?.colors?.success
-                            : theme?.colors?.error,
-                        },
-                      ]}
-                    >
-                      {positive ? '+' : ''}
-                      {stock.variation.toFixed(1)}%
-                    </Text>
-                  </View>
-                  <Sparkline
-                    data={stock.series}
-                    color={positive ? '#51d289' : '#f26b6b'}
-                  />
-                </Card>
-              </Pressable>
-            )
-          })}
-        </ScrollView>
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => router.push(recommendationTarget)}
-        >
-          <Card
-            style={styles.virtualAssistantWrapper}
-            gradientColors={['#D1A954', '#F2C572']}
-            contentStyle={styles.virtualAssistantButton}
-          >
-            <Text style={styles.virtualAssistantText}>
-              Falar com assistente virtual
+        {loading ? (
+          <Loading />
+        ) : error ? (
+          <Card style={styles.errorCard}>
+            <Text variant="subtitle">Algo deu errado</Text>
+            <Text>{error}</Text>
+            <Text style={styles.retry} onPress={() => loadData(false)}>
+              Tentar novamente
             </Text>
-            <Feather name="arrow-right" size={20} color="#241B0D" />
           </Card>
-        </TouchableOpacity>
+        ) : (
+          <>
+            <Card style={styles.summaryCard}>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryColumn}>
+                  <Text variant="caption">Valor da carteira</Text>
+                  <Text style={styles.summaryValue}>
+                    {formatCurrency(summary?.valorAtualCarteira)}
+                  </Text>
+                </View>
+                <View style={styles.summaryColumn}>
+                  <Text variant="caption">Saldo disponivel</Text>
+                  <Text style={styles.summaryValue}>
+                    {formatCurrency(summary?.saldoDisponivel)}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryColumn}>
+                  <Text variant="caption">Ganho acumulado</Text>
+                  <Text style={[styles.summaryValue, styles.positive]}>
+                    {formatCurrency(summary?.ganhoTotalCarteira)}
+                  </Text>
+                </View>
+                <View style={styles.summaryColumn}>
+                  <Text variant="caption">Variacao</Text>
+                  <Text
+                    style={[
+                      styles.summaryValue,
+                      (summary?.percentualGanhoCarteira ?? 0) >= 0
+                        ? styles.positive
+                        : styles.negative,
+                    ]}
+                  >
+                    {formatPercentage(summary?.percentualGanhoCarteira)}
+                  </Text>
+                </View>
+              </View>
+            </Card>
+
+            <Card style={styles.card}>
+              <Text variant="subtitle" style={styles.sectionTitle}>
+                Maiores altas
+              </Text>
+              {gainers.length === 0 ? (
+                <Text variant="caption">
+                  Nenhuma posicao positiva encontrada.
+                </Text>
+              ) : (
+                gainers.map((item) => (
+                  <View key={item.id} style={styles.positionRow}>
+                    <View style={styles.positionLeft}>
+                      <Feather name="trending-up" size={18} color="#2E8B57" />
+                      <View>
+                        <Text style={styles.positionName}>
+                          {item.nomeInvestimento}
+                        </Text>
+                        <Text variant="caption">
+                          {item.simboloInvestimento}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.positionRight}>
+                      <Text style={styles.positive}>
+                        {formatPercentage(item.percentualGanhoPerda)}
+                      </Text>
+                      <Text variant="caption">
+                        {formatCurrency(item.valorAtual)}
+                      </Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </Card>
+
+            <Card style={styles.card}>
+              <Text variant="subtitle" style={styles.sectionTitle}>
+                Maiores quedas
+              </Text>
+              {losers.length === 0 ? (
+                <Text variant="caption">
+                  Nenhuma posicao negativa encontrada.
+                </Text>
+              ) : (
+                losers.map((item) => (
+                  <View key={item.id} style={styles.positionRow}>
+                    <View style={styles.positionLeft}>
+                      <Feather name="trending-down" size={18} color="#B22222" />
+                      <View>
+                        <Text style={styles.positionName}>
+                          {item.nomeInvestimento}
+                        </Text>
+                        <Text variant="caption">
+                          {item.simboloInvestimento}
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.positionRight}>
+                      <Text style={styles.negative}>
+                        {formatPercentage(item.percentualGanhoPerda)}
+                      </Text>
+                      <Text variant="caption">
+                        {formatCurrency(item.valorAtual)}
+                      </Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </Card>
+
+            <Card style={styles.card}>
+              <Text variant="subtitle" style={styles.sectionTitle}>
+                Ultimas operacoes
+              </Text>
+              {statement.length === 0 ? (
+                <Text variant="caption">Nenhuma operacao encontrada.</Text>
+              ) : (
+                statement.map((item) => {
+                  const sign = getTransactionSign(item.tipoTransacao)
+                  const color =
+                    sign > 0 ? '#2E8B57' : sign < 0 ? '#B22222' : '#4A4A4A'
+                  const value = item.valorTotal ?? item.saldoAtual ?? 0
+
+                  return (
+                    <View key={item.id} style={styles.operationRow}>
+                      <View style={styles.operationLeft}>
+                        <Feather name="clock" size={18} color={color} />
+                        <View>
+                          <Text style={styles.positionName}>
+                            {getTransactionLabel(item.tipoTransacao)}
+                          </Text>
+                          <Text variant="caption">
+                            {item.nomeInvestimento || 'Conta'}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={styles.operationRight}>
+                        <Text style={{ color }}>
+                          {`${sign > 0 ? '+' : sign < 0 ? '-' : ''}${formatCurrency(Math.abs(value))}`}
+                        </Text>
+                        <Text variant="caption">
+                          {formatDateTimeToBR(item.dataTransacao)}
+                        </Text>
+                      </View>
+                    </View>
+                  )
+                })
+              )}
+            </Card>
+          </>
+        )}
       </ScrollView>
     </Container>
   )
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    gap: 24,
+  content: {
+    paddingBottom: 32,
+    gap: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  headerSubtitle: {
-    marginBottom: 4,
-  },
-  headerTitle: {
-    fontSize: 26,
-  },
-  avatarCard: {
-    width: 48,
-    height: 48,
-    borderWidth: 0,
-    shadowOpacity: 0,
-  },
-  avatarContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 16,
-    padding: 0,
-  },
-  portfolioCard: {
-    gap: 16,
-    padding: 24,
-    borderRadius: 24,
-  },
-  portfolioHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  portfolioLabel: {
-    fontSize: 16,
-  },
-  portfolioChipWrapper: {
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-    backgroundColor: 'transparent',
-  },
-  portfolioChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 999,
-  },
-  portfolioChipText: {
+  caption: {
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
     fontSize: 12,
+  },
+  headline: {
+    fontSize: 24,
+  },
+  errorCard: {
+    gap: 8,
+  },
+  retry: {
+    marginTop: 8,
+    color: '#1E90FF',
     fontWeight: '600',
   },
-  portfolioValue: {
-    fontSize: 32,
-    fontWeight: '700',
+  summaryCard: {
+    gap: 16,
   },
-  portfolioHighlights: {
+  summaryRow: {
     flexDirection: 'row',
     gap: 16,
   },
-  highlightCard: {
+  summaryColumn: {
     flex: 1,
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-    backgroundColor: 'transparent',
+    gap: 4,
   },
-  highlightContent: {
-    borderRadius: 16,
-    gap: 6,
-  },
-  highlightLabel: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  highlightValue: {
+  summaryValue: {
     fontSize: 18,
     fontWeight: '600',
   },
-  sectionHeader: {
-    gap: 6,
+  positive: {
+    color: '#2E8B57',
+  },
+  negative: {
+    color: '#B22222',
+  },
+  card: {
+    gap: 12,
   },
   sectionTitle: {
-    fontSize: 18,
+    marginBottom: 4,
   },
-  sectionCaption: {
-    fontSize: 13,
+  positionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
   },
-  carousel: {
-    paddingVertical: 4,
-    gap: 16,
-    paddingRight: 8,
-  },
-  stockPressable: {
-    marginRight: 16,
-  },
-  stockCardWrapper: {
-    width: 170,
-    borderRadius: 18,
-  },
-  stockCardContent: {
+  positionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
-    padding: 16,
-    borderRadius: 18,
   },
-  stockHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  stockName: {
-    fontWeight: '600',
-  },
-  stockVariation: {
-    fontWeight: '600',
-  },
-  sparkline: {
-    flexDirection: 'row',
+  positionRight: {
     alignItems: 'flex-end',
-    height: 44,
-    gap: 3,
   },
-  sparklineColumn: {
-    flex: 1,
+  positionName: {
+    fontWeight: '600',
+  },
+  operationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0,0,0,0.05)',
   },
-  sparklineBar: {
-    width: 4,
-    borderRadius: 4,
-  },
-  virtualAssistantWrapper: {
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  virtualAssistantButton: {
+  operationLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 18,
+    gap: 12,
   },
-  virtualAssistantText: {
-    color: '#241B0D',
-    fontSize: 16,
-    fontWeight: '600',
+  operationRight: {
+    alignItems: 'flex-end',
   },
 })

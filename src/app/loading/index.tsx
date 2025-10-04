@@ -8,9 +8,10 @@ import Container from '@/components/Container'
 import { Loading } from '@/components/Loading'
 import Text from '@/components/Text'
 import { LocalStore } from '@/constants/environment-variables'
-import { clearAuth, setUser } from '@/redux/features/auth/authSlice'
+import { clearAuth, setSession } from '@/redux/features/auth/authSlice'
 import { setThemeMode, THEME_KEY } from '@/redux/features/theme/themeSlice'
 import { useAppDispatch } from '@/redux/hook'
+import { setAuthorizationHeader } from '@/services/api'
 
 export default function LoadingPage() {
   const dispatch = useAppDispatch()
@@ -26,16 +27,35 @@ export default function LoadingPage() {
 
   const checkUserAuthentication = async () => {
     try {
-      const userData = await AsyncStorage.getItem(LocalStore.USER_DATA)
-      if (userData) {
-        dispatch(setUser(JSON.parse(userData)))
-        setInitialRoute('/(app)/home')
-      } else {
-        setInitialRoute('/(auth)/sign-in')
+      const entries = await AsyncStorage.multiGet([
+        LocalStore.USER_DATA,
+        LocalStore.ACCESS_TOKEN,
+      ])
+
+      const userValue = entries.find(
+        ([key]) => key === LocalStore.USER_DATA,
+      )?.[1]
+      const tokenValue = entries.find(
+        ([key]) => key === LocalStore.ACCESS_TOKEN,
+      )?.[1]
+
+      if (userValue && tokenValue) {
+        try {
+          const parsedUser = JSON.parse(userValue)
+          dispatch(setSession({ user: parsedUser, token: tokenValue }))
+          setAuthorizationHeader(tokenValue)
+          setInitialRoute('/(app)/home')
+          return
+        } catch (parseError) {
+          console.warn('Falha ao ler usuario armazenado:', parseError)
+        }
       }
+
       dispatch(clearAuth())
+      setInitialRoute('/(auth)/sign-in')
     } catch (error) {
-      console.log(error)
+      console.warn('Falha ao recuperar sessao:', error)
+      dispatch(clearAuth())
       setInitialRoute('/(auth)/sign-in')
     }
   }
@@ -49,7 +69,7 @@ export default function LoadingPage() {
     if (initialRoute) {
       const timer = setTimeout(() => {
         setRedirectReady(true)
-      }, 3000)
+      }, 1500)
 
       return () => clearTimeout(timer)
     }
@@ -61,9 +81,9 @@ export default function LoadingPage() {
 
   return (
     <Container style={styles.container}>
-      <Text style={styles.icon}>👍</Text>
+      <Text style={styles.icon}>INV</Text>
       <Text variant="title">Bem vindo!</Text>
-      <Text variant="subtitle">Carregando suas informações...</Text>
+      <Text variant="subtitle">Carregando suas informacoes...</Text>
       <Loading />
     </Container>
   )
