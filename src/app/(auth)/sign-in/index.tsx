@@ -1,13 +1,13 @@
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form'
-import { View, StyleSheet, TouchableOpacity, Image } from 'react-native'
+import { View, StyleSheet, TouchableOpacity } from 'react-native'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'expo-router'
 import { z } from 'zod'
 
-import logo from '@/assets/logoEscuro.png'
 import Button from '@/components/Button'
 import Container from '@/components/Container'
+import Logo from '@/components/Logo'
 import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
 import { signIn } from '@/redux/features/auth/authThunk'
@@ -19,20 +19,20 @@ const SignInSchema = z.object({
     .string()
     .min(1, { message: 'Campo de CPF é obrigatório' })
     .refine(ValidCPF, { message: 'CPF inválido' }),
-  password: z.string().min(1, { message: 'Campo de senha é obrigatório' }),
+  password: z.string().min(1, { message: 'Campo de senha e obrigatorio' }),
 })
 
-type signInInput = z.infer<typeof SignInSchema>
+type SignInInput = z.infer<typeof SignInSchema>
 
 export default function SignInPage() {
   const router = useRouter()
   const dispatch = useAppDispatch()
 
-  const methods = useForm<signInInput>({
+  const methods = useForm<SignInInput>({
     resolver: zodResolver(SignInSchema),
   })
 
-  const onSubmit: SubmitHandler<signInInput> = (data) => {
+  const onSubmit: SubmitHandler<SignInInput> = (data) => {
     dispatch(signIn(data))
   }
 
@@ -40,11 +40,7 @@ export default function SignInPage() {
     <Container style={{ justifyContent: 'center' }}>
       <FormProvider {...methods}>
         <View style={styles.logoContainer}>
-          <Image
-            source={logo}
-            style={{ width: '100%', height: '50%' }}
-            resizeMode="contain"
-          />
+          <Logo style={{ width: '100%', height: '50%' }} resizeMode="contain" />
         </View>
 
         <View>
@@ -72,9 +68,9 @@ export default function SignInPage() {
         <Button title="Login" onPress={methods.handleSubmit(onSubmit)} />
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Possui uma conta? </Text>
+          <Text style={styles.footerText}>Não possui uma conta? </Text>
           <TouchableOpacity onPress={() => router.push('sign-up')}>
-            <Text style={styles.footerLink}>Cadastre Se</Text>
+            <Text style={styles.footerLink}>Cadastre-se</Text>
           </TouchableOpacity>
         </View>
       </FormProvider>
@@ -93,7 +89,7 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     fontSize: 12,
-    color: '#B8860B', // Dourado discreto
+    color: '#B8860B',
   },
   footer: {
     flexDirection: 'row',
@@ -102,7 +98,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    // color: '#000',
   },
   footerLink: {
     fontSize: 14,
