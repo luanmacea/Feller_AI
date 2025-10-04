@@ -59,7 +59,7 @@ export default function LoadingPage() {
     if (initialRoute) {
       const timer = setTimeout(() => {
         setRedirectReady(true)
-      }, 3000)
+      }, 500)
 
       return () => clearTimeout(timer)
     }

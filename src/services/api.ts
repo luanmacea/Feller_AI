@@ -13,10 +13,9 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     const token = await SecureStore.getItemAsync(LocalStore.ACCESS_TOKEN)
-    const cleanToken = token?.replace(/"/g, '')
 
-    if (cleanToken) {
-      config.headers.authorization = `Bearer ${cleanToken}`
+    if (token) {
+      config.headers.authorization = `Bearer ${token}`
     } else {
       delete config.headers.authorization
     }

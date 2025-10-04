@@ -68,7 +68,7 @@ export default function HomePage() {
     return 'Boa noite'
   }, [])
 
-  const displayName = user?.name?.split(' ')[0] || 'Investidor'
+  const displayName = user?.nomeUsuario?.split(' ')[0] || 'Investidor'
 
   const balance = walletMock.balance
   const balanceFormatter = useMemo(
