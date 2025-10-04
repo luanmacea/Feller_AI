@@ -1,148 +1,81 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createAsyncThunk } from '@reduxjs/toolkit'
+import * as SecureStore from 'expo-secure-store'
 
 import { LocalStore } from '@/constants/environment-variables'
 import api from '@/services/api'
 
-interface ISignInProps {
+interface SignInPayload {
   cpf: string
   password: string
 }
 
-interface ISignUpProps {
-  name: string
-  cpf: string
+interface SignUpPayload {
+  nomeUsuario: string
   email: string
+  cpf: string
   password: string
-  avatarUrl?: string
+  dtNascimento: string
+  tipo?: string
 }
 
-interface IChangePasswordProps {
+interface ResetPasswordPayload {
   cpf: string
   newPassword: string
 }
 
+// const persistSession = async ({ token, user }: AuthSuccessPayload) => {
+//   setAuthorizationHeader(token)
+//   await AsyncStorage.multiSet([
+//     [LocalStore.ACCESS_TOKEN, token],
+//     [LocalStore.USER_DATA, JSON.stringify(user)],
+//   ])
+// }
+
 export const signIn = createAsyncThunk(
   'auth/signIn',
-  async (data: ISignInProps, { rejectWithValue }) => {
+  async (data: SignInPayload, { rejectWithValue }) => {
     try {
-      const response = await api.get('/users', {
-        params: {
-          ...data,
-        },
+      const response = await api.post('/usuarios/login', {
+        cpf: data.cpf,
+        senha: data.password,
       })
 
-      if (response.data[0]?.id) {
-        const user = response.data[0]
-        await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
-        return response.data
-      }
-
-      return rejectWithValue('CPF ou senha incorretos.')
+      return response.data
     } catch (error) {
-      console.error('Erro ao fazer login:', error)
-      return rejectWithValue('Erro ao fazer login.')
+      return rejectWithValue(error || 'Erro ao autenticar usuario.')
     }
   },
 )
 
 export const signUp = createAsyncThunk(
   'auth/signUp',
-  async (data: ISignUpProps, { rejectWithValue }) => {
+  async (data: SignUpPayload, { rejectWithValue }) => {
     try {
-      const { cpf } = data
-
-      const existingUsersResponse = await api.get('/users', {
-        params: { cpf },
-      })
-      const existingUsers = existingUsersResponse.data
-
-      if (existingUsers.length > 0) {
-        return rejectWithValue('Este CPF ja esta cadastrado.')
-      }
-
-      const avatarUrl = data.avatarUrl?.trim()
-
-      const newUser = {
-        name: data.name,
-        cpf,
-        email: data.email,
-        password: data.password,
-        avatarUrl: avatarUrl && avatarUrl.length > 0 ? avatarUrl : undefined,
-      }
-      const response = await api.post('/users', newUser)
-      const user = response.data
-      await AsyncStorage.setItem(LocalStore.USER_DATA, JSON.stringify(user))
+      const response = await api.post('/usuarios/criar', data)
       return response.data
     } catch (error) {
-      console.error('Erro ao cadastrar o usuario:', error)
-      return rejectWithValue('Erro ao cadastrar o usuario.')
+      return rejectWithValue(error || 'Erro ao criar usuario.')
     }
   },
 )
 
 export const logOut = createAsyncThunk('auth/logOut', async () => {
-  await AsyncStorage.removeItem(LocalStore.USER_DATA)
+  await SecureStore.deleteItemAsync(LocalStore.ACCESS_TOKEN)
+  await SecureStore.deleteItemAsync(LocalStore.USER_DATA)
 })
-
-export const verifyCpf = createAsyncThunk(
-  'auth/verifyCpf',
-  async ({ cpf }: { cpf: string }, { rejectWithValue }) => {
-    try {
-      const response = await api.get('/users', {
-        params: { cpf },
-      })
-      const users = response.data
-
-      if (!Array.isArray(users) || users.length === 0) {
-        return rejectWithValue('CPF nao encontrado.')
-      }
-
-      const user = users[0]
-
-      return {
-        id: user.id,
-        name: user.name,
-        cpf: user.cpf,
-        email: user.email,
-        avatarUrl: user.avatarUrl,
-      }
-    } catch (error) {
-      console.error('Erro ao verificar CPF:', error)
-      return rejectWithValue('Erro ao verificar CPF.')
-    }
-  },
-)
 
 export const changePassword = createAsyncThunk(
   'auth/changePassword',
-  async ({ cpf, newPassword }: IChangePasswordProps, { rejectWithValue }) => {
+  async ({ cpf, newPassword }: ResetPasswordPayload, { rejectWithValue }) => {
     try {
-      const findResponse = await api.get('/users', {
-        params: { cpf },
+      const response = await api.post('/usuarios/criar-senha', {
+        cpf,
+        senhaNova: newPassword,
       })
 
-      const users = findResponse.data
-
-      if (!Array.isArray(users) || users.length === 0) {
-        return rejectWithValue('CPF nao encontrado.')
-      }
-
-      const user = users[0]
-      const updateResponse = await api.patch(`/users/${user.id}`, {
-        password: newPassword,
-      })
-      const updatedUser = { ...user, ...updateResponse.data }
-      await AsyncStorage.setItem(
-        LocalStore.USER_DATA,
-        JSON.stringify(updatedUser),
-      )
-
-      return updatedUser
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message || 'Erro ao alterar a senha.'
-      return rejectWithValue(message)
+      return response.data
+    } catch (error) {
+      return rejectWithValue(error || 'Nao foi possivel redefinir a senha.')
     }
   },
 )
