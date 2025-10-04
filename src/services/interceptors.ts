@@ -6,11 +6,7 @@ import api from './api'
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (
-      error.response &&
-      error.config.url !== '/permissoes' &&
-      error.config.url !== '/permissoes/modulos'
-    ) {
+    if (error.response) {
       const errorResponse = {
         message: error.response.data.message,
         errors: error.response.data.errors,

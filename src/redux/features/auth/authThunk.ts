@@ -33,7 +33,7 @@ interface ResetPasswordPayload {
 
 export const signIn = createAsyncThunk(
   'auth/signIn',
-  async (data: SignInPayload, { rejectWithValue }) => {
+  async (data: SignInPayload) => {
     try {
       const response = await api.post('/usuarios/login', {
         cpf: data.cpf,
@@ -42,22 +42,32 @@ export const signIn = createAsyncThunk(
 
       return response.data
     } catch (error) {
-      return rejectWithValue(error || 'Erro ao autenticar usuario.')
+      return error || 'Erro ao realizar login.'
     }
   },
 )
 
 export const signUp = createAsyncThunk(
   'auth/signUp',
-  async (data: SignUpPayload, { rejectWithValue }) => {
+  async (data: SignUpPayload) => {
     try {
       const response = await api.post('/usuarios/criar', data)
       return response.data
     } catch (error) {
-      return rejectWithValue(error || 'Erro ao criar usuario.')
+      return error || 'Erro ao realizar cadastro.'
     }
   },
 )
+
+export const getLogged = createAsyncThunk('auth/getLogged', async () => {
+  try {
+    const response = await api.post('/usuarios/logged')
+
+    return response.data
+  } catch (error) {
+    return error || 'Erro ao obter usuario logado.'
+  }
+})
 
 export const logOut = createAsyncThunk('auth/logOut', async () => {
   await SecureStore.deleteItemAsync(LocalStore.ACCESS_TOKEN)
@@ -66,7 +76,7 @@ export const logOut = createAsyncThunk('auth/logOut', async () => {
 
 export const changePassword = createAsyncThunk(
   'auth/changePassword',
-  async ({ cpf, newPassword }: ResetPasswordPayload, { rejectWithValue }) => {
+  async ({ cpf, newPassword }: ResetPasswordPayload) => {
     try {
       const response = await api.post('/usuarios/criar-senha', {
         cpf,
@@ -75,7 +85,7 @@ export const changePassword = createAsyncThunk(
 
       return response.data
     } catch (error) {
-      return rejectWithValue(error || 'Nao foi possivel redefinir a senha.')
+      return error || 'Erro ao alterar senha.'
     }
   },
 )

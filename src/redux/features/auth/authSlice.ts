@@ -73,6 +73,25 @@ export const authSlice = createSlice({
         'Nao foi possivel criar o usuario.'
     })
 
+    builder.addCase(signUp.pending, (state) => {
+      state.isLoading = true
+      state.error = null
+    })
+    builder.addCase(signUp.fulfilled, (state, action) => {
+      const { token } = action.payload
+      SecureStore.setItemAsync(LocalStore.ACCESS_TOKEN, JSON.stringify(token))
+      state.isAuthenticated = true
+      state.isLoading = false
+      state.error = null
+    })
+    builder.addCase(signUp.rejected, (state, action) => {
+      state.isLoading = false
+      state.error =
+        (action.payload as string) ||
+        action.error.message ||
+        'Nao foi possivel criar o usuario.'
+    })
+
     builder.addCase(changePassword.pending, (state) => {
       state.isLoading = true
       state.error = null
