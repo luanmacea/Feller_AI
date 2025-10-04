@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { TouchableOpacity, View } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
@@ -8,7 +7,6 @@ import { Stack, useNavigation, useRouter } from 'expo-router'
 
 import Text from '@/components/Text'
 import { navigationScreensOptions } from '@/mocks/navigation'
-import { selectAuthState } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 
@@ -18,12 +16,6 @@ export default function AppLayout() {
   const pathname = usePathname()
   const screenName = pathname.replace(/^\//, '') + '/index'
   const options = navigationScreensOptions[screenName] || {}
-  const auth = useAppSelector(selectAuthState)
-
-  useEffect(() => {
-    if (!auth.isAuthenticated) return
-    router.replace('loading')
-  }, [auth.isAuthenticated])
 
   return (
     <ThemeProvider theme={theme}>

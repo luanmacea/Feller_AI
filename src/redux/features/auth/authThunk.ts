@@ -34,39 +34,27 @@ interface ResetPasswordPayload {
 export const signIn = createAsyncThunk(
   'auth/signIn',
   async (data: SignInPayload) => {
-    try {
-      const response = await api.post('/usuarios/login', {
-        cpf: data.cpf,
-        senha: data.password,
-      })
+    const response = await api.post('/usuarios/login', {
+      cpf: data.cpf,
+      senha: data.password,
+    })
 
-      return response.data
-    } catch (error) {
-      return error || 'Erro ao realizar login.'
-    }
+    return response.data
   },
 )
 
 export const signUp = createAsyncThunk(
   'auth/signUp',
   async (data: SignUpPayload) => {
-    try {
-      const response = await api.post('/usuarios/criar', data)
-      return response.data
-    } catch (error) {
-      return error || 'Erro ao realizar cadastro.'
-    }
+    const response = await api.post('/usuarios/criar', data)
+    return response.data
   },
 )
 
 export const getLogged = createAsyncThunk('auth/getLogged', async () => {
-  try {
-    const response = await api.post('/usuarios/logged')
+  const response = await api.post('/usuarios/logged')
 
-    return response.data
-  } catch (error) {
-    return error || 'Erro ao obter usuario logado.'
-  }
+  return response.data
 })
 
 export const logOut = createAsyncThunk('auth/logOut', async () => {
@@ -77,15 +65,11 @@ export const logOut = createAsyncThunk('auth/logOut', async () => {
 export const changePassword = createAsyncThunk(
   'auth/changePassword',
   async ({ cpf, newPassword }: ResetPasswordPayload) => {
-    try {
-      const response = await api.post('/usuarios/criar-senha', {
-        cpf,
-        senhaNova: newPassword,
-      })
+    const response = await api.post('/usuarios/criar-senha', {
+      cpf,
+      senhaNova: newPassword,
+    })
 
-      return response.data
-    } catch (error) {
-      return error || 'Erro ao alterar senha.'
-    }
+    return response.data
   },
 )
