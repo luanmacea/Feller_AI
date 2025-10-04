@@ -12,11 +12,15 @@ export interface AuthRouteParams {
 }
 
 export interface IUser {
-  id: string
-  name: string
-  cpf: string
+  id: number
+  nomeUsuario: string
   email: string
-  avatarUrl?: string
+  role: string
+  cpf: number
+  userIsActive: boolean
+  dt_nascimento: string
+  tipo: string
+  saldoCarteira: number
 }
 
 export interface MonthlyReport {

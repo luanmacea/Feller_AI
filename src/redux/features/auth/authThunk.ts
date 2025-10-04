@@ -39,6 +39,7 @@ export const signIn = createAsyncThunk(
       senha: data.password,
     })
 
+    console.log('response signIn', response.data)
     return response.data
   },
 )

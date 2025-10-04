@@ -12,13 +12,10 @@ import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
 import { signIn } from '@/redux/features/auth/authThunk'
 import { useAppDispatch } from '@/redux/hook'
-import { ValidCPF } from '@/utils/validValues'
 
 const SignInSchema = z.object({
-  cpf: z
-    .string()
-    .min(1, { message: 'Campo de CPF é obrigatório' })
-    .refine(ValidCPF, { message: 'CPF inválido' }),
+  cpf: z.string().min(1, { message: 'Campo de CPF é obrigatório' }),
+  // .refine(ValidCPF, { message: 'CPF inválido' }),
   password: z.string().min(1, { message: 'Campo de senha e obrigatorio' }),
 })
 

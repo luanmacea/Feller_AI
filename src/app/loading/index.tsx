@@ -3,17 +3,21 @@ import { StyleSheet } from 'react-native'
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Redirect } from 'expo-router'
+import * as SecureStore from 'expo-secure-store'
 
 import Container from '@/components/Container'
 import { Loading } from '@/components/Loading'
 import Text from '@/components/Text'
 import { LocalStore } from '@/constants/environment-variables'
-import { clearAuth, setUser } from '@/redux/features/auth/authSlice'
+import { selectUser } from '@/redux/features/auth/authSelectors'
+import { clearAuth } from '@/redux/features/auth/authSlice'
+import { getLogged } from '@/redux/features/auth/authThunk'
 import { setThemeMode, THEME_KEY } from '@/redux/features/theme/themeSlice'
-import { useAppDispatch } from '@/redux/hook'
+import { useAppDispatch, useAppSelector } from '@/redux/hook'
 
 export default function LoadingPage() {
   const dispatch = useAppDispatch()
+  const user = useAppSelector(selectUser)
   const [initialRoute, setInitialRoute] = useState<string | null>(null)
   const [redirectReady, setRedirectReady] = useState(false)
 
@@ -26,10 +30,10 @@ export default function LoadingPage() {
 
   const checkUserAuthentication = async () => {
     try {
-      const userData = await AsyncStorage.getItem(LocalStore.USER_DATA)
-      if (userData) {
-        dispatch(setUser(JSON.parse(userData)))
-        setInitialRoute('/(app)/home')
+      const token = await SecureStore.getItemAsync(LocalStore.ACCESS_TOKEN)
+      if (token) {
+        dispatch(getLogged())
+        // setInitialRoute('/(app)/home')
       } else {
         setInitialRoute('/(auth)/sign-in')
       }
@@ -39,6 +43,12 @@ export default function LoadingPage() {
       setInitialRoute('/(auth)/sign-in')
     }
   }
+
+  useEffect(() => {
+    if (!user?.id) {
+      setInitialRoute('/(app)/home')
+    }
+  }, [user])
 
   useEffect(() => {
     handleGetTheme()
