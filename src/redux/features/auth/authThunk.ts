@@ -38,8 +38,7 @@ export const signIn = createAsyncThunk(
       cpf: data.cpf,
       senha: data.password,
     })
-
-    console.log('response signIn', response.data)
+    SecureStore.setItemAsync(LocalStore.ACCESS_TOKEN, response.data.token)
     return response.data
   },
 )
@@ -53,7 +52,9 @@ export const signUp = createAsyncThunk(
 )
 
 export const getLogged = createAsyncThunk('auth/getLogged', async () => {
-  const response = await api.post('/usuarios/logged')
+  console.log('antes thunk')
+  const response = await api.get('/usuarios/logged')
+  console.log('depois thunk', response.data)
 
   return response.data
 })

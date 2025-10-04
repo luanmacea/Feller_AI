@@ -27,6 +27,7 @@ export default function SignInPage() {
 
   const methods = useForm<SignInInput>({
     resolver: zodResolver(SignInSchema),
+    defaultValues: { cpf: '11111111111', password: '123456' },
   })
 
   const onSubmit: SubmitHandler<SignInInput> = (data) => {

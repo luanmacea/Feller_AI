@@ -33,9 +33,7 @@ export const authSlice = createSlice({
       state.isLoading = true
       state.isAuthenticated = false
     })
-    builder.addCase(signIn.fulfilled, (state, action) => {
-      const { token } = action.payload
-      SecureStore.setItemAsync(LocalStore.ACCESS_TOKEN, JSON.stringify(token))
+    builder.addCase(signIn.fulfilled, (state) => {
       state.isLoading = false
       state.isAuthenticated = true
     })
@@ -62,7 +60,7 @@ export const authSlice = createSlice({
       state.isLoading = true
     })
     builder.addCase(getLogged.fulfilled, (state, action) => {
-      console.log('getLogged.fulfilled', action.payload)
+      console.log('NO SLICE', action.payload)
       state.user = action.payload
       SecureStore.setItemAsync(
         LocalStore.USER_DATA,

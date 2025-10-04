@@ -9,7 +9,7 @@ import Container from '@/components/Container'
 import { Loading } from '@/components/Loading'
 import Text from '@/components/Text'
 import { LocalStore } from '@/constants/environment-variables'
-import { selectUser } from '@/redux/features/auth/authSelectors'
+import { selectAuthState } from '@/redux/features/auth/authSelectors'
 import { clearAuth } from '@/redux/features/auth/authSlice'
 import { getLogged } from '@/redux/features/auth/authThunk'
 import { setThemeMode, THEME_KEY } from '@/redux/features/theme/themeSlice'
@@ -17,7 +17,7 @@ import { useAppDispatch, useAppSelector } from '@/redux/hook'
 
 export default function LoadingPage() {
   const dispatch = useAppDispatch()
-  const user = useAppSelector(selectUser)
+  const auth = useAppSelector(selectAuthState)
   const [initialRoute, setInitialRoute] = useState<string | null>(null)
   const [redirectReady, setRedirectReady] = useState(false)
 
@@ -33,22 +33,22 @@ export default function LoadingPage() {
       const token = await SecureStore.getItemAsync(LocalStore.ACCESS_TOKEN)
       if (token) {
         dispatch(getLogged())
-        // setInitialRoute('/(app)/home')
+        setInitialRoute('/(app)/home')
       } else {
         setInitialRoute('/(auth)/sign-in')
       }
       dispatch(clearAuth())
     } catch (error) {
-      console.log(error)
+      console.log('NA TELA LOADING', error)
       setInitialRoute('/(auth)/sign-in')
     }
   }
 
   useEffect(() => {
-    if (!user?.id) {
+    if (auth.user?.id) {
       setInitialRoute('/(app)/home')
     }
-  }, [user])
+  }, [auth.user?.id])
 
   useEffect(() => {
     handleGetTheme()

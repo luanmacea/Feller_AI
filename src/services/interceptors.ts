@@ -1,3 +1,6 @@
+import * as SecureStore from 'expo-secure-store'
+
+import { LocalStore } from '@/constants/environment-variables'
 import { setGlobalError } from '@/redux/features/global/globalSlice'
 import { store } from '@/redux/store'
 
@@ -25,7 +28,8 @@ api.interceptors.response.use(
 
       return Promise.reject(errorResponse)
     } else {
-      // Cookies.remove(COOKIES.ACCESS_TOKEN)
+      SecureStore.deleteItemAsync(LocalStore.ACCESS_TOKEN)
+      SecureStore.deleteItemAsync(LocalStore.USER_DATA)
       return Promise.reject(error)
     }
   },
