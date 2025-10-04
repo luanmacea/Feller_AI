@@ -9,15 +9,23 @@ interface ButtonProps {
   title: string
   onPress: () => void
   style?: ViewStyle
+  disabled?: boolean
 }
 
-export default function Button({ title, onPress, style }: ButtonProps) {
+export default function Button({
+  title,
+  onPress,
+  style,
+  disabled,
+}: ButtonProps) {
   const theme = useAppSelector(selectThemeState)
+  const isDisabled = Boolean(disabled)
 
   const styles = StyleSheet.create({
     buttonContainer: {
       borderRadius: 8,
       overflow: 'hidden',
+      opacity: isDisabled ? 0.6 : 1,
     },
     gradient: {
       paddingVertical: 10,
@@ -38,6 +46,7 @@ export default function Button({ title, onPress, style }: ButtonProps) {
       style={[styles.buttonContainer, style]}
       onPress={onPress}
       activeOpacity={0.8}
+      disabled={isDisabled}
     >
       <LinearGradient
         colors={[

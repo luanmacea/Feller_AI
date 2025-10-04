@@ -12,28 +12,37 @@ import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
 import { signIn } from '@/redux/features/auth/authThunk'
 import { useAppDispatch } from '@/redux/hook'
-import { ValidCPF } from '@/utils/validValues'
 
 const SignInSchema = z.object({
-  cpf: z
+  email: z
     .string()
-    .min(1, { message: 'Campo de CPF é obrigatório' })
-    .refine(ValidCPF, { message: 'CPF inválido' }),
-  password: z.string().min(1, { message: 'Campo de senha é obrigatório' }),
+    .trim()
+    .min(1, { message: 'Campo de email e obrigatorio' })
+    .email({ message: 'Informe um email valido' }),
+  password: z.string().min(1, { message: 'Campo de senha e obrigatorio' }),
 })
 
-type signInInput = z.infer<typeof SignInSchema>
+type SignInInput = z.infer<typeof SignInSchema>
 
 export default function SignInPage() {
   const router = useRouter()
   const dispatch = useAppDispatch()
 
-  const methods = useForm<signInInput>({
+  const methods = useForm<SignInInput>({
     resolver: zodResolver(SignInSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   })
 
-  const onSubmit: SubmitHandler<signInInput> = (data) => {
-    dispatch(signIn(data))
+  const onSubmit: SubmitHandler<SignInInput> = (data) => {
+    dispatch(
+      signIn({
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+      }),
+    )
   }
 
   return (
@@ -49,10 +58,9 @@ export default function SignInPage() {
 
         <View>
           <TextInput
-            name="cpf"
-            label="Digite seu CPF"
-            placeholder="CPF"
-            numeric
+            name="email"
+            label="Digite seu email"
+            placeholder="email@exemplo.com"
           />
           <TextInput
             name="password"
@@ -72,9 +80,9 @@ export default function SignInPage() {
         <Button title="Login" onPress={methods.handleSubmit(onSubmit)} />
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Possui uma conta? </Text>
+          <Text style={styles.footerText}>Nao possui uma conta? </Text>
           <TouchableOpacity onPress={() => router.push('sign-up')}>
-            <Text style={styles.footerLink}>Cadastre Se</Text>
+            <Text style={styles.footerLink}>Cadastre-se</Text>
           </TouchableOpacity>
         </View>
       </FormProvider>
@@ -93,7 +101,7 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     fontSize: 12,
-    color: '#B8860B', // Dourado discreto
+    color: '#B8860B',
   },
   footer: {
     flexDirection: 'row',
@@ -102,7 +110,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    // color: '#000',
   },
   footerLink: {
     fontSize: 14,

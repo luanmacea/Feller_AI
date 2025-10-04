@@ -6,6 +6,7 @@ import { z } from 'zod'
 
 import Button from '@/components/Button'
 import Container from '@/components/Container'
+import { DatePickerInput } from '@/components/DatePicker'
 import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
 import { signUp } from '@/redux/features/auth/authThunk'
@@ -14,7 +15,10 @@ import { ValidCPF } from '@/utils/validValues'
 
 const SignUpSchema = z
   .object({
-    name: z.string().trim().min(1, { message: 'Campo de nome e obrigatorio' }),
+    nomeUsuario: z
+      .string()
+      .trim()
+      .min(1, { message: 'Campo de nome e obrigatorio' }),
     cpf: z
       .string()
       .trim()
@@ -25,18 +29,15 @@ const SignUpSchema = z
       .trim()
       .min(1, { message: 'Campo de email e obrigatorio' })
       .email('Informe um email valido'),
-    password: z.string().min(1, { message: 'Campo de senha e obrigatorio' }),
+    dtNascimento: z
+      .string()
+      .min(1, { message: 'Campo de data de nascimento e obrigatorio' }),
+    password: z
+      .string()
+      .min(6, { message: 'Senha deve ter ao menos 6 caracteres' }),
     confirmPassword: z
       .string()
       .min(1, { message: 'Campo de confirmacao de senha e obrigatorio' }),
-    avatarUrl: z
-      .string()
-      .trim()
-      .optional()
-      .refine(
-        (value) => !value || value.length === 0 || /^https?:\/\//.test(value),
-        { message: 'Informe uma URL valida' },
-      ),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Senhas diferentes',
@@ -45,44 +46,41 @@ const SignUpSchema = z
 
 type SignUpInput = z.infer<typeof SignUpSchema>
 
-type SignUpPayload = Omit<SignUpInput, 'confirmPassword'>
-
 export default function SignUpPage() {
   const dispatch = useAppDispatch()
 
   const methods = useForm<SignUpInput>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
-      name: '',
+      nomeUsuario: '',
       cpf: '',
       email: '',
+      dtNascimento: '',
       password: '',
       confirmPassword: '',
-      avatarUrl: '',
     },
   })
 
   const onSubmit: SubmitHandler<SignUpInput> = async (data) => {
-    const avatar =
-      data.avatarUrl && data.avatarUrl.length > 0
-        ? data.avatarUrl
-        : `https://i.pravatar.cc/100?u=${encodeURIComponent(data.email)}`
+    const birthDate = data.dtNascimento
+      ? new Date(data.dtNascimento).toISOString().split('T')[0]
+      : ''
 
-    const payload: SignUpPayload = {
-      name: data.name.trim(),
-      cpf: data.cpf.trim(),
-      email: data.email.trim(),
-      password: data.password,
-      avatarUrl: avatar,
-    }
-
-    dispatch(signUp(payload))
+    dispatch(
+      signUp({
+        nomeUsuario: data.nomeUsuario.trim(),
+        cpf: data.cpf.trim(),
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        dtNascimento: birthDate,
+      }),
+    )
   }
 
   return (
     <Container style={{ justifyContent: 'center' }}>
       <FormProvider {...methods}>
-        <View style={styles.logoContainer}>
+        <View style={styles.header}>
           <Text variant="title" style={{ marginBottom: 8 }}>
             Crie sua conta
           </Text>
@@ -90,22 +88,26 @@ export default function SignUpPage() {
         </View>
 
         <View style={styles.form}>
-          <TextInput name="name" label="Digite seu nome" placeholder="Nome" />
+          <TextInput
+            name="nomeUsuario"
+            label="Digite seu nome completo"
+            placeholder="Nome"
+          />
           <TextInput
             name="cpf"
             label="Digite seu CPF"
-            placeholder="CPF"
+            placeholder="000.000.000-00"
             numeric
           />
           <TextInput
             name="email"
             label="Digite seu email"
-            placeholder="Email"
+            placeholder="email@exemplo.com"
           />
-          <TextInput
-            name="avatarUrl"
-            label="URL da imagem (opcional)"
-            placeholder="https://"
+          <DatePickerInput
+            name="dtNascimento"
+            label="Data de nascimento"
+            maximumDate={new Date()}
           />
           <TextInput
             name="password"
@@ -127,7 +129,7 @@ export default function SignUpPage() {
 }
 
 const styles = StyleSheet.create({
-  logoContainer: {
+  header: {
     alignItems: 'center',
     marginBottom: 32,
   },

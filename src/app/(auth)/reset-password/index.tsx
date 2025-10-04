@@ -9,9 +9,12 @@ import Button from '@/components/Button'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
-import { selectAuthState } from '@/redux/features/auth/authSelectors'
+import {
+  selectAuthError,
+  selectAuthLoading,
+} from '@/redux/features/auth/authSelectors'
 import { clearAuth } from '@/redux/features/auth/authSlice'
-import { changePassword, verifyCpf } from '@/redux/features/auth/authThunk'
+import { changePassword } from '@/redux/features/auth/authThunk'
 import { useAppDispatch, useAppSelector } from '@/redux/hook'
 import { ValidCPF } from '@/utils/validValues'
 
@@ -19,10 +22,14 @@ const ResetPasswordSchema = z
   .object({
     cpf: z
       .string()
-      .min(1, { message: 'Campo de cpf é obrigatório' })
-      .refine(ValidCPF, { message: 'CPF inválido' }),
-    password: z.string().optional(),
-    confirmPassword: z.string().optional(),
+      .min(1, { message: 'Campo de CPF e obrigatorio' })
+      .refine(ValidCPF, { message: 'CPF invalido' }),
+    password: z
+      .string()
+      .min(6, { message: 'Senha deve ter ao menos 6 caracteres' }),
+    confirmPassword: z
+      .string()
+      .min(1, { message: 'Campo de confirmacao de senha e obrigatorio' }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Senhas diferentes',
@@ -33,7 +40,8 @@ type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>
 
 export default function ResetPasswordPage() {
   const dispatch = useAppDispatch()
-  const auth = useAppSelector(selectAuthState)
+  const isLoading = useAppSelector(selectAuthLoading)
+  const authError = useAppSelector(selectAuthError)
 
   const methods = useForm<ResetPasswordInput>({
     resolver: zodResolver(ResetPasswordSchema),
@@ -44,8 +52,6 @@ export default function ResetPasswordPage() {
     },
   })
 
-  const cpfVerified = auth.isCpfVerified
-
   useEffect(() => {
     dispatch(clearAuth())
 
@@ -54,22 +60,10 @@ export default function ResetPasswordPage() {
     }
   }, [dispatch])
 
-  const handleSubmit: SubmitHandler<ResetPasswordInput> = async (data) => {
-    if (!cpfVerified) {
-      await dispatch(verifyCpf({ cpf: data.cpf }))
-      return
-    }
-
-    if (!data.password) {
-      methods.setError('password', {
-        message: 'Campo de senha é obrigatório',
-      })
-      return
-    }
-
+  const handleSubmit: SubmitHandler<ResetPasswordInput> = (data) => {
     dispatch(
       changePassword({
-        cpf: auth.verifiedCpf ?? data.cpf,
+        cpf: data.cpf,
         newPassword: data.password,
       }),
     )
@@ -77,38 +71,35 @@ export default function ResetPasswordPage() {
 
   return (
     <Container style={{ justifyContent: 'center' }}>
-      <View style={styles.logoContainer}>
+      <View style={styles.header}>
         <Text variant="title" style={{ marginBottom: 8 }}>
           Recuperar Senha
         </Text>
       </View>
       <FormProvider {...methods}>
-        {!cpfVerified ? (
-          <TextInput
-            name="cpf"
-            label="Digite seu CPF"
-            placeholder="CPF"
-            numeric
-          />
-        ) : (
-          <>
-            <TextInput
-              name="password"
-              label="Nova senha"
-              placeholder="Digite a nova senha"
-              password
-            />
-            <TextInput
-              name="confirmPassword"
-              label="Confirmar senha"
-              placeholder="Confirme a nova senha"
-              password
-            />
-          </>
-        )}
+        <TextInput
+          name="cpf"
+          label="Digite seu CPF"
+          placeholder="000.000.000-00"
+          numeric
+        />
+        <TextInput
+          name="password"
+          label="Nova senha"
+          placeholder="Digite a nova senha"
+          password
+        />
+        <TextInput
+          name="confirmPassword"
+          label="Confirmar senha"
+          placeholder="Confirme a nova senha"
+          password
+        />
+        {authError ? <Text style={styles.errorText}>{authError}</Text> : null}
         <Button
           style={{ marginTop: 16 }}
-          title={!cpfVerified ? 'Enviar' : 'Alterar'}
+          title={isLoading ? 'Enviando...' : 'Alterar senha'}
+          disabled={isLoading}
           onPress={methods.handleSubmit(handleSubmit)}
         />
       </FormProvider>
@@ -117,8 +108,13 @@ export default function ResetPasswordPage() {
 }
 
 const styles = StyleSheet.create({
-  logoContainer: {
+  header: {
     alignItems: 'center',
     marginBottom: 32,
+  },
+  errorText: {
+    marginTop: 8,
+    color: '#B22222',
+    fontSize: 12,
   },
 })
