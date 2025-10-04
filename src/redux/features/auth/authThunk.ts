@@ -52,9 +52,7 @@ export const signUp = createAsyncThunk(
 )
 
 export const getLogged = createAsyncThunk('auth/getLogged', async () => {
-  console.log('antes thunk')
   const response = await api.get('/usuarios/logged')
-  console.log('depois thunk', response.data)
 
   return response.data
 })
