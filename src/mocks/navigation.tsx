@@ -50,6 +50,14 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: true,
     icon: <Feather name="dollar-sign" size={24} color="grey" />,
   },
+  'investments/index': {
+    title: 'Investimentos',
+    headerShown: true,
+    headerBackVisible: true,
+    showInFooter: false,
+    isApp: true,
+    icon: <Feather name="layers" size={24} color="grey" />,
+  },
   'investor-profile/index': {
     title: 'Perfil de Investidor',
     headerShown: true,
