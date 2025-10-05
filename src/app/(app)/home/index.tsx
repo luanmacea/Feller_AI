@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Pressable,
   ScrollView,
@@ -13,20 +13,40 @@ import { useRouter } from 'expo-router'
 import Card from '@/components/Card'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
-import { investmentDetails, summary, walletMock } from '@/mocks/investmentMocks'
+import { summary, walletMock } from '@/mocks/investmentMocks'
 import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
+import api from '@/services/api'
 
 interface SparklineProps {
   data: number[]
   color: string
 }
 
-interface TopStockItem {
-  id?: string
-  name: string
-  variation: number
+interface InvestimentItem {
+  id: number
+  nome: string
+  simbolo: 'PETR4'
+  categoria: string
+  precoBase: number
+  precoAtual: number
+  variacaoPercentual: number
+  descricao: string
+  data: string
+  liquidez: string
+  dividendYield: number
+  frequenciaDividendo: number
+  ativo: boolean
+  visivelParaUsuarios: boolean
+  quantidadeTotal: number
+  quantidadeDisponivel: number
+  risco: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface TopStockItem extends InvestimentItem {
   isPositive: boolean
   series: number[]
 }
@@ -84,30 +104,42 @@ export default function HomePage() {
     [isDark],
   )
 
-  const topStocks: TopStockItem[] = useMemo(() => {
-    const baseStocks = [...summary.actives, ...summary.negatives]
-    const details = Object.values(investmentDetails)
+  const [stockData, setStockData] = useState<TopStockItem[]>([])
 
-    return baseStocks.map((item, index) => {
-      const direction = item.isPositive ? 1 : -1
-      const amplitude = Math.max(Math.abs(item.variation) * 2, 4)
-      const match = details.find((detail) => detail.name === item.name)
+  useEffect(() => {
+    const fetchStocks = async () => {
+      try {
+        const response = await api.get('/investimentos')
+        const items = response.data as InvestimentItem[]
 
-      const series = Array.from({ length: 8 }, (_, idx) => {
-        const trend = direction * idx * (Math.abs(item.variation) / 3)
-        const wave = Math.sin((idx + 1) * 0.8 + index) * amplitude * 0.2
-        const base = item.isPositive ? 50 : 58
-        return base + trend + wave
-      })
+        const sorted = [...items].sort(
+          (a, b) =>
+            Math.abs(b.variacaoPercentual) - Math.abs(a.variacaoPercentual),
+        )
+        const limited = sorted.slice(0, 6).map((item, index) => {
+          const direction = item.variacaoPercentual >= 0 ? 1 : -1
+          const amplitude = Math.max(Math.abs(item.variacaoPercentual) * 2, 4)
+          const series = Array.from({ length: 8 }, (_, idx) => {
+            const trend =
+              direction * idx * (Math.abs(item.variacaoPercentual) / 3)
+            const wave = Math.sin((idx + 1) * 0.8 + index) * amplitude * 0.2
+            const base = item.variacaoPercentual >= 0 ? 50 : 58
+            return base + trend + wave
+          })
 
-      return {
-        id: match?.id,
-        name: item.name,
-        variation: item.variation,
-        isPositive: item.isPositive,
-        series,
+          return {
+            isPositive: item.variacaoPercentual >= 0,
+            series,
+            ...item,
+          }
+        })
+        setStockData(limited)
+      } catch (error) {
+        console.error('Erro ao carregar investimentos', error)
       }
-    })
+    }
+
+    fetchStocks()
   }, [])
 
   const stockGradients = useMemo(
@@ -126,12 +158,10 @@ export default function HomePage() {
 
   const recommendationTarget = '/(app)/virtual-assistant'
   const handleSelectStock = (stock: TopStockItem) => {
-    if (stock.id) {
-      router.push({
-        pathname: '/(app)/investmentDetails',
-        params: { id: stock.id },
-      })
-    }
+    router.push({
+      pathname: '/(app)/investmentDetails',
+      params: { id: String(stock.id) },
+    })
   }
 
   return (
@@ -259,12 +289,12 @@ export default function HomePage() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.carousel}
         >
-          {topStocks.map((stock, index) => {
+          {stockData.map((stock, index) => {
             const positive = stock.isPositive
             const gradient = stockGradients[positive ? 'positive' : 'negative']
             return (
               <Pressable
-                key={`${stock.name}-${index}`}
+                key={`${stock.id}-${index}`}
                 style={styles.stockPressable}
                 onPress={() => handleSelectStock(stock)}
               >
@@ -274,7 +304,9 @@ export default function HomePage() {
                   gradientColors={gradient}
                 >
                   <View style={styles.stockHeader}>
-                    <Text variant="subtitle">{stock.name}</Text>
+                    <Text variant="subtitle" style={{ maxWidth: '70%' }}>
+                      {stock.simbolo}
+                    </Text>
                     <Text
                       style={[
                         styles.stockVariation,
@@ -286,7 +318,7 @@ export default function HomePage() {
                       ]}
                     >
                       {positive ? '+' : ''}
-                      {stock.variation.toFixed(1)}%
+                      {stock.variacaoPercentual.toFixed(2)}%
                     </Text>
                   </View>
                   <Sparkline

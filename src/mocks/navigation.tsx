@@ -5,17 +5,17 @@ import { ScreenOption } from '@/types/types'
 export const navigationScreensOptions: Record<string, ScreenOption> = {
   'sign-in/index': {
     title: '',
-    headerShown: true,
+    headerShown: false,
     headerBackVisible: false,
   },
   'sign-up/index': {
     title: '',
-    headerShown: true,
+    headerShown: false,
     headerBackVisible: true,
   },
   'reset-password/index': {
     title: '',
-    headerShown: true,
+    headerShown: false,
     headerBackVisible: true,
   },
   'home/index': {
@@ -53,8 +53,8 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
   'investments/index': {
     title: 'Investimentos',
     headerShown: true,
-    headerBackVisible: true,
-    showInFooter: false,
+    headerBackVisible: false,
+    showInFooter: true,
     isApp: true,
     icon: <Feather name="layers" size={24} color="grey" />,
   },
@@ -62,7 +62,7 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     title: 'Perfil de Investidor',
     headerShown: true,
     headerBackVisible: false,
-    showInFooter: true,
+    showInFooter: false,
     isApp: true,
     icon: <Feather name="user-check" size={24} color="grey" />,
   },
