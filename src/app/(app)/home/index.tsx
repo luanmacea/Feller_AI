@@ -18,35 +18,14 @@ import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
+import { InvestmentItem } from '@/types/typesCerto'
 
 interface SparklineProps {
   data: number[]
   color: string
 }
 
-interface InvestimentItem {
-  id: number
-  nome: string
-  simbolo: 'PETR4'
-  categoria: string
-  precoBase: number
-  precoAtual: number
-  variacaoPercentual: number
-  descricao: string
-  data: string
-  liquidez: string
-  dividendYield: number
-  frequenciaDividendo: number
-  ativo: boolean
-  visivelParaUsuarios: boolean
-  quantidadeTotal: number
-  quantidadeDisponivel: number
-  risco: string
-  createdAt: string
-  updatedAt: string
-}
-
-interface TopStockItem extends InvestimentItem {
+interface TopStockItem extends InvestmentItem {
   isPositive: boolean
   series: number[]
 }
@@ -110,7 +89,7 @@ export default function HomePage() {
     const fetchStocks = async () => {
       try {
         const response = await api.get('/investimentos')
-        const items = response.data as InvestimentItem[]
+        const items = response.data as InvestmentItem[]
 
         const sorted = [...items].sort(
           (a, b) =>

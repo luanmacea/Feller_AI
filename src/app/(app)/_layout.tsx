@@ -33,11 +33,15 @@ export default function AppLayout() {
 
   return (
     <ThemeProvider theme={theme}>
-      <View style={{ flex: 1 }}>
+      <View
+        style={{
+          flex: 1,
+        }}
+      >
         {options.headerShown !== false && (
           <View
             style={{
-              paddingTop: insets.top + 8,
+              paddingTop: insets.top + 12,
               paddingBottom: 8,
               paddingHorizontal: 16,
               backgroundColor: theme.colors?.grey0,
@@ -70,7 +74,7 @@ export default function AppLayout() {
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                top: 0,
+                top: 15,
                 bottom: 0,
                 justifyContent: 'center',
                 alignItems: 'center',
