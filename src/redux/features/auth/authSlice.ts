@@ -60,7 +60,6 @@ export const authSlice = createSlice({
       state.isLoading = true
     })
     builder.addCase(getLogged.fulfilled, (state, action) => {
-      console.log('NO SLICE', action.payload)
       state.user = action.payload
       SecureStore.setItemAsync(
         LocalStore.USER_DATA,
