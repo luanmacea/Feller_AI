@@ -19,3 +19,29 @@ export interface InvestmentItem {
   createdAt: string
   updatedAt: string
 }
+
+export interface IWalletSummary {
+  valorTotalInvestido: number
+  valorAtualCarteira: number
+  ganhoTotalCarteira: number
+  percentualGanhoCarteira: number
+  totalDividendosCarteira: number
+  quantidadePosicoes: number
+  posicoes: Array<{
+    id: number
+    nomeInvestimento: string
+    simboloInvestimento: string
+    categoria: string
+    risco: string
+    quantidadeTotal: number
+    precoMedio: number
+    valorInvestido: number
+    precoAtual: number
+    valorAtual: number
+    ganhoPerda: number
+    percentualGanhoPerda: number
+    totalDividendosRecebidos: number
+    dataPrimeiraCompra: string
+    dataUltimaMovimentacao: string
+  }>
+}
