@@ -1,5 +1,11 @@
-import { useMemo } from 'react'
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -7,9 +13,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import Card from '@/components/Card'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
-import { investmentDetails } from '@/mocks/investmentMocks'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
+import api from '@/services/api'
+import type { InvestmentItem } from '@/types/typesCerto'
 
 interface TrendPoint {
   label: string
@@ -19,26 +26,59 @@ interface TrendPoint {
 const CHART_HEIGHT = 120
 
 const sectorIcons: Record<string, keyof typeof Feather.glyphMap> = {
-  Biotecnologia: 'activity',
-  Financeiro: 'dollar-sign',
-  Energia: 'zap',
-  Logistica: 'truck',
-  Mineracao: 'trending-up',
+  RENDA_VARIAVEL: 'trending-up',
+  RENDA_FIXA: 'shield',
+  INTERNACIONAL: 'globe',
+  FUNDO_IMOBILIARIO: 'home',
+  CRIPTOMOEDA: 'hexagon',
 }
 
 export default function InvestmentDetailsPage() {
   const router = useRouter()
-  const { id } = useLocalSearchParams()
+  const { id } = useLocalSearchParams<{ id?: string }>()
   const theme = useAppSelector(selectThemeState)
   const colors = theme.colors || {}
   const isDark = theme.mode === 'dark'
 
-  const investment = investmentDetails[id as string]
+  const [investment, setInvestment] = useState<InvestmentItem | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchInvestment = async () => {
+      if (!id) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        const response = await api.get<InvestmentItem>(`/investimentos/${id}`)
+        setInvestment(response.data)
+      } catch (error) {
+        console.error('Erro ao carregar investimento', error)
+        setInvestment(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInvestment()
+  }, [id])
 
   const trendData = useMemo(
-    () => buildTrend(investment?.variation ?? 0),
-    [investment?.variation],
+    () => buildTrend(investment?.variacaoPercentual ?? 0),
+    [investment?.variacaoPercentual],
   )
+
+  if (loading) {
+    return (
+      <Container style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary || '#C99A2E'} />
+        <Text style={{ marginTop: 12, color: colors.grey2 || '#7b8faa' }}>
+          Carregando detalhes...
+        </Text>
+      </Container>
+    )
+  }
 
   if (!investment) {
     return (
@@ -48,14 +88,14 @@ export default function InvestmentDetailsPage() {
     )
   }
 
-  const isPositive = investment.variation >= 0
-  const sectorIcon = sectorIcons[investment.category] || 'bar-chart'
+  const isPositive = investment.variacaoPercentual >= 0
+  const sectorIcon = sectorIcons[investment.categoria] || 'bar-chart'
   const highlightColor = isPositive ? '#44C18C' : '#E15D6E'
 
   const handleTalk = () => {
     router.push({
       pathname: '/(app)/virtual-assistant',
-      params: { assetId: investment.id },
+      params: { assetId: String(investment.id) },
     })
   }
 
@@ -91,12 +131,12 @@ export default function InvestmentDetailsPage() {
             />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.headerTitle]}>{investment.name}</Text>
-            <Text style={[styles.headerSubtitle]}>
-              Investimento do setor {investment.category}
+            <Text style={styles.headerTitle}>{investment.nome}</Text>
+            <Text style={styles.headerSubtitle}>
+              {investment.simbolo} � {investment.categoria.replace('_', ' ')}
             </Text>
-            <Text style={[styles.headerDescription]}>
-              _{investment.description}_
+            <Text style={styles.headerDescription}>
+              _{investment.descricao}_
             </Text>
           </View>
         </Card>
@@ -105,20 +145,20 @@ export default function InvestmentDetailsPage() {
           <View style={styles.metricsRow}>
             <MetricBlock
               label="Valor atual"
-              value={formatCurrency(investment.value)}
+              value={formatCurrency(investment.precoAtual)}
               color={colors.grey2 || '#f4f7ff'}
             />
             <MetricBlock
               label="Variacao"
-              value={`${isPositive ? '+' : ''}${investment.variation.toFixed(1)}%`}
+              value={`${isPositive ? '+' : ''}${investment.variacaoPercentual.toFixed(2)}%`}
               color={highlightColor}
               icon={isPositive ? 'trending-up' : 'trending-down'}
             />
           </View>
           <View style={styles.metricsRow}>
             <MetricBlock
-              label="Ultima atualizacao"
-              value={investment.lastUpdate}
+              label="Atualizado em"
+              value={formatDate(investment.updatedAt || investment.data)}
               color={colors.grey2 || '#7b8faa'}
             />
             <MetricBlock
@@ -158,13 +198,33 @@ export default function InvestmentDetailsPage() {
           </View>
         </Card>
 
+        <Card
+          variant="flat"
+          style={styles.infoCard}
+          contentStyle={StyleSheet.flatten([
+            styles.infoContent,
+            { backgroundColor: isDark ? '#121a2b' : '#ffffff' },
+          ])}
+        >
+          <InfoRow label="Liquidez" value={investment.liquidez} />
+          <InfoRow
+            label="Frequencia de dividendo"
+            value={`${investment.frequenciaDividendo}x ao ano`}
+          />
+          <InfoRow label="Risco" value={investment.risco} />
+          <InfoRow
+            label="Quantidade disponivel"
+            value={investment.quantidadeDisponivel.toLocaleString('pt-BR')}
+          />
+        </Card>
+
         <Pressable onPress={handleTalk} style={{ marginTop: 16 }}>
           <Card
             style={styles.ctaCard}
             gradientColors={['#2f60ff', '#4c87ff']}
             contentStyle={styles.ctaContent}
           >
-            <View style={{ width: '90%' }}>
+            <View>
               <Text style={styles.ctaTitle}>
                 Conversar com Assistente sobre este ativo
               </Text>
@@ -182,6 +242,17 @@ export default function InvestmentDetailsPage() {
 
 function formatCurrency(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+function formatDate(value: string | undefined) {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 function buildTrend(variation: number): TrendPoint[] {
@@ -228,6 +299,15 @@ function TrendSparkline({
   )
 }
 
+function InfoRow({ label, value }: { label: string; value: string | number }) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  )
+}
+
 function MetricBlock({
   label,
   value,
@@ -267,6 +347,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
   },
   headerCard: {
     borderWidth: 0,
@@ -292,14 +373,17 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
+    color: '#f3f7ff',
   },
   headerSubtitle: {
     fontSize: 13,
     marginBottom: 6,
+    color: '#c7d5f3',
   },
   headerDescription: {
     fontStyle: 'italic',
     fontSize: 13,
+    color: '#d8e1f9',
   },
   metricsCard: {
     gap: 16,
@@ -348,21 +432,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 16,
   },
-  chart: {
-    height: CHART_HEIGHT,
-    borderRadius: 18,
-    borderWidth: 1,
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 4,
-    paddingBottom: 8,
-  },
-  chartContentOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  chartLine: {
-    ...StyleSheet.absoluteFillObject,
-  },
   sparklineRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -388,6 +457,33 @@ const styles = StyleSheet.create({
   },
   trendLabel: {
     fontSize: 11,
+  },
+  infoCard: {
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+    backgroundColor: 'transparent',
+    marginTop: 16,
+  },
+  infoContent: {
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    gap: 14,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: '#98a6c4',
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#f5f7ff',
   },
   ctaCard: {
     borderWidth: 0,
