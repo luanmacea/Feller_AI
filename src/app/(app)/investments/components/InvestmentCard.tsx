@@ -1,20 +1,25 @@
 import { Pressable, View, StyleSheet } from 'react-native'
 
+import { useRouter } from 'expo-router'
+
 import Card from '@/components/Card'
 import FeatherIcon from '@/components/FeatherIcon'
 import Text from '@/components/Text'
 import { InvestmentItem } from '@/types/typesCerto'
 
 export default function InvestmentCard({ item }: { item: InvestmentItem }) {
-  const handleGoToDetails = (id: string) => {
-    // navegação para detalhes
-    console.log('Navegar para detalhes do investimento com ID:', id)
+  const router = useRouter()
+  const handleGoToDetails = () => {
+    router.push({
+      pathname: '/(app)/investmentDetails',
+      params: { id: String(item.id) },
+    })
   }
 
   const isPositive = item.variacaoPercentual >= 0
 
   return (
-    <Pressable onPress={() => handleGoToDetails(String(item.id))}>
+    <Pressable onPress={() => handleGoToDetails()}>
       <Card style={{ marginBottom: 20 }}>
         <View style={styles.header}>
           <View>
