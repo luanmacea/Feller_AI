@@ -1,18 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native'
+import { FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 
 import Card from '@/components/Card'
 import Container from '@/components/Container'
+import LoadingList from '@/components/LoadingList'
 import Text from '@/components/Text'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
@@ -65,22 +59,11 @@ export default function WalletPage() {
   const movementData = useMemo(() => buildMovements(positions), [positions])
 
   if (loading) {
-    return (
-      <Container style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary || '#C99A2E'} />
-        <Text style={{ marginTop: 12, color: colors.grey2 || '#7b8faa' }}>
-          Carregando carteira...
-        </Text>
-      </Container>
-    )
+    return <LoadingList text="Carregando carteira..." />
   }
 
   if (!summary) {
-    return (
-      <Container style={styles.centered}>
-        <Text variant="title">Nao foi possivel carregar a carteira.</Text>
-      </Container>
-    )
+    return <LoadingList status="empty" />
   }
 
   const handleSelectInvestment = (id: number) => {
