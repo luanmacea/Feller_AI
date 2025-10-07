@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
+  TextInput,
   View,
 } from 'react-native'
 
@@ -12,11 +12,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 
 import Card from '@/components/Card'
 import Container from '@/components/Container'
+import LoadingList from '@/components/LoadingList'
 import Text from '@/components/Text'
+import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import type { InvestmentItem } from '@/types/typesCerto'
+import type { IComment, InvestmentItem } from '@/types/typesCerto'
 
 interface TrendPoint {
   label: string
@@ -34,6 +36,7 @@ const sectorIcons: Record<string, keyof typeof Feather.glyphMap> = {
 }
 
 export default function InvestmentDetailsPage() {
+  const user = useAppSelector(selectUser)
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id?: string }>()
   const theme = useAppSelector(selectThemeState)
@@ -42,6 +45,10 @@ export default function InvestmentDetailsPage() {
 
   const [investment, setInvestment] = useState<InvestmentItem | null>(null)
   const [loading, setLoading] = useState(true)
+  const [comments, setComments] = useState<IComment | null>(null)
+  const [newComment, setNewComment] = useState('')
+  // const [replyText, setReplyText] = useState('')
+  // const [replyTarget, setReplyTarget] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchInvestment = async () => {
@@ -64,28 +71,68 @@ export default function InvestmentDetailsPage() {
     fetchInvestment()
   }, [id])
 
+  useEffect(() => {
+    if (id) fetchComments()
+  }, [id])
+
+  const fetchComments = async () => {
+    try {
+      const res = await api.get(`/comentarios/investimento/${id}`)
+      setComments(res.data)
+    } catch (err) {
+      console.error('Erro ao buscar comentários', err)
+    }
+  }
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) return
+    try {
+      await api.post('/comentarios', {
+        investimentoId: id,
+        conteudo: newComment.trim(),
+      })
+      setNewComment('')
+      fetchComments()
+    } catch (err) {
+      console.error('Erro ao adicionar comentário', err)
+    }
+  }
+
+  const handleDeleteComment = async (comentarioId: string) => {
+    try {
+      await api.delete(`/comentarios/${comentarioId}`)
+      fetchComments()
+    } catch (err) {
+      console.error('Erro ao deletar comentário', err)
+    }
+  }
+
+  // const handleReply = async (comentarioId: string) => {
+  //   if (!replyText.trim()) return
+  //   try {
+  //     await api.post('/comentarios/responder', {
+  //       comentarioId,
+  //       conteudo: replyText.trim(),
+  //     })
+  //     setReplyText('')
+  //     setReplyTarget(null)
+  //     fetchComments()
+  //   } catch (err) {
+  //     console.error('Erro ao responder comentário', err)
+  //   }
+  // }
+
   const trendData = useMemo(
     () => buildTrend(investment?.variacaoPercentual ?? 0),
     [investment?.variacaoPercentual],
   )
 
   if (loading) {
-    return (
-      <Container style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary || '#C99A2E'} />
-        <Text style={{ marginTop: 12, color: colors.grey2 || '#7b8faa' }}>
-          Carregando detalhes...
-        </Text>
-      </Container>
-    )
+    return <LoadingList text="Carregando detalhes..." status="loading" />
   }
 
   if (!investment) {
-    return (
-      <Container style={styles.centered}>
-        <Text variant="title">Investimento nao encontrado.</Text>
-      </Container>
-    )
+    return <LoadingList text="Investimento nao encontrado." status="empty" />
   }
 
   const isPositive = investment.variacaoPercentual >= 0
@@ -216,6 +263,118 @@ export default function InvestmentDetailsPage() {
             label="Quantidade disponivel"
             value={investment.quantidadeDisponivel.toLocaleString('pt-BR')}
           />
+        </Card>
+
+        <Card
+          variant="flat"
+          style={styles.commentsCard}
+          contentStyle={StyleSheet.flatten([
+            styles.commentsContent,
+            { backgroundColor: isDark ? '#121a2b' : '#ffffff' },
+          ])}
+        >
+          <Text
+            style={[styles.sectionTitle, { color: colors.grey1 || '#1f2a3d' }]}
+          >
+            Comentários
+          </Text>
+
+          {/* Campo de novo comentário */}
+          <View style={styles.commentInputContainer}>
+            <TextInput
+              style={[
+                styles.commentInput,
+                {
+                  color: isDark ? '#fff' : '#000',
+                  borderColor: colors.grey3 || '#ccc',
+                },
+              ]}
+              placeholder="Escreva um comentário..."
+              placeholderTextColor={isDark ? '#8893ac' : '#7a8aa6'}
+              value={newComment}
+              onChangeText={setNewComment}
+            />
+            <Pressable onPress={handleAddComment}>
+              <Feather
+                name="send"
+                size={20}
+                color={colors.primary || '#2f60ff'}
+              />
+            </Pressable>
+          </View>
+
+          {/* Lista de comentários */}
+          {comments &&
+            comments.comentarios.map((comment) => {
+              const ehAutor = comment.usuarioId === user?.id
+              return (
+                <View key={comment.id} style={styles.commentBlock}>
+                  <View style={styles.commentHeader}>
+                    <Text style={styles.commentAuthor}>
+                      {comment.nomeUsuario}
+                    </Text>
+                    <Text style={styles.commentDate}>
+                      {formatDate(comment.dataCriacao)}
+                    </Text>
+                  </View>
+                  <Text style={styles.commentText}>{comment.conteudo}</Text>
+
+                  <View style={styles.commentActions}>
+                    <Pressable
+                      // onPress={() => setReplyTarget(String(comment.id))}
+                      onPress={() => console.log('teste')}
+                    >
+                      <Text style={styles.commentAction}>Responder</Text>
+                    </Pressable>
+                    {ehAutor && (
+                      <Pressable
+                        onPress={() => handleDeleteComment(String(comment.id))}
+                      >
+                        <Text
+                          style={[styles.commentAction, { color: '#E15D6E' }]}
+                        >
+                          Excluir
+                        </Text>
+                      </Pressable>
+                    )}
+                  </View>
+
+                  {/* Respostas */}
+                  {/* {comment.respostas?.map((resp) => (
+                    <View key={resp.id} style={styles.replyBlock}>
+                      <Text style={styles.replyAuthor}>{resp.autor}</Text>
+                      <Text style={styles.replyText}>{resp.conteudo}</Text>
+                    </View>
+                  ))} */}
+
+                  {/* Campo de resposta */}
+                  {/* {replyTarget === comment.id && (
+                    <View style={styles.replyInputContainer}>
+                      <TextInput
+                        style={[
+                          styles.commentInput,
+                          {
+                            color: isDark ? '#fff' : '#000',
+                            borderColor: colors.grey3 || '#ccc',
+                          },
+                        ]}
+                        placeholder="Escreva uma resposta..."
+                        placeholderTextColor={isDark ? '#8893ac' : '#7a8aa6'}
+                        value={replyText}
+                        onChangeText={setReplyText}
+                      />
+                      <Pressable onPress={() => handleReply(comment.id)}>
+                        <Feather
+                          name="send"
+                          size={20}
+                          color={colors.primary || '#2f60ff'}
+                        />
+                      </Pressable>
+                    </View>
+                  )} */}
+                </View>
+              )
+            })}
         </Card>
 
         <Pressable onPress={handleTalk} style={{ marginTop: 16 }}>
@@ -509,5 +668,86 @@ const styles = StyleSheet.create({
     color: '#dce6ff',
     fontSize: 13,
     marginTop: 4,
+  },
+  commentsCard: {
+    borderWidth: 0,
+    shadowOpacity: 0,
+    elevation: 0,
+    marginTop: 16,
+  },
+  commentsContent: {
+    borderRadius: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  commentInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 8,
+  },
+  commentInput: {
+    flex: 1,
+    fontSize: 14,
+  },
+  commentBlock: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a3550',
+    paddingBottom: 10,
+    marginBottom: 10,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  commentAuthor: {
+    fontWeight: '600',
+    color: '#cdd7f3',
+  },
+  commentDate: {
+    fontSize: 12,
+    color: '#9aa6c9',
+  },
+  commentText: {
+    marginTop: 4,
+    color: '#e5ebfa',
+  },
+  commentActions: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 6,
+  },
+  commentAction: {
+    fontSize: 13,
+    color: '#4c87ff',
+  },
+  replyBlock: {
+    marginLeft: 20,
+    marginTop: 6,
+    borderLeftWidth: 2,
+    borderLeftColor: '#4c87ff44',
+    paddingLeft: 8,
+  },
+  replyAuthor: {
+    fontWeight: '500',
+    color: '#cfd8fa',
+  },
+  replyText: {
+    color: '#e5ebfa',
+  },
+  replyInputContainer: {
+    marginTop: 6,
+    marginLeft: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    gap: 8,
   },
 })

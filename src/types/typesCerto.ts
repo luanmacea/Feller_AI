@@ -45,3 +45,22 @@ export interface IWalletSummary {
     dataUltimaMovimentacao: string
   }>
 }
+
+export interface IComment {
+  investimentoId: number
+  totalComentarios: number
+  comentarios: Array<{
+    id: number
+    conteudo: string
+    usuarioId: number
+    nomeUsuario: string
+    emailUsuario: string
+    investimentoId: number
+    nomeInvestimento: string
+    simboloInvestimento: string
+    dataCriacao: string
+    dataAtualizacao: string | null
+    editado: boolean
+    ativo: boolean
+  }>
+}
