@@ -178,13 +178,11 @@ export default function InvestmentDetailsPage() {
             />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>{investment.nome}</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text variant="title">{investment.nome}</Text>
+            <Text variant="caption">
               {investment.simbolo} � {investment.categoria.replace('_', ' ')}
             </Text>
-            <Text style={styles.headerDescription}>
-              _{investment.descricao}_
-            </Text>
+            <Text variant="caption">_{investment.descricao}_</Text>
           </View>
         </Card>
 
@@ -310,10 +308,10 @@ export default function InvestmentDetailsPage() {
               return (
                 <View key={comment.id} style={styles.commentBlock}>
                   <View style={styles.commentHeader}>
-                    <Text style={styles.commentAuthor}>
+                    <Text variant="subtitle" style={{ fontWeight: 'bold' }}>
                       {comment.nomeUsuario}
                     </Text>
-                    <Text style={styles.commentDate}>
+                    <Text variant="caption">
                       {formatDate(comment.dataCriacao)}
                     </Text>
                   </View>
@@ -461,8 +459,8 @@ function TrendSparkline({
 function InfoRow({ label, value }: { label: string; value: string | number }) {
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text variant="caption">{label}</Text>
+      <Text>{value}</Text>
     </View>
   )
 }
@@ -714,7 +712,6 @@ const styles = StyleSheet.create({
   },
   commentText: {
     marginTop: 4,
-    color: '#e5ebfa',
   },
   commentActions: {
     flexDirection: 'row',

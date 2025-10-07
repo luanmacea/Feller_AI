@@ -120,21 +120,11 @@ export default function WalletPage() {
             { backgroundColor: isDark ? '#111827' : '#ffffff' },
           ])}
         >
-          <Text
-            style={[styles.sectionTitle, { color: colors.grey1 || '#1f2a3d' }]}
-          >
-            Movimento por ativo
-          </Text>
+          <Text variant="title">Movimento por ativo</Text>
           <TrendSparkline data={movementData} />
           <View style={styles.trendLabels}>
             {movementData.map((point) => (
-              <Text
-                key={point.label}
-                style={[
-                  styles.trendLabel,
-                  { color: colors.grey2 || '#6f819f' },
-                ]}
-              >
+              <Text key={point.label} variant="caption">
                 {point.label}
               </Text>
             ))}
@@ -149,11 +139,7 @@ export default function WalletPage() {
             { backgroundColor: isDark ? '#121a2b' : '#ffffff' },
           ])}
         >
-          <Text
-            style={[styles.sectionTitle, { color: colors.grey1 || '#1f2a3d' }]}
-          >
-            Distribuicao por categoria
-          </Text>
+          <Text variant="title">Distribuicao por categoria</Text>
           <View style={styles.distributionList}>
             {distribution.map((item) => (
               <View key={item.label} style={styles.distributionRow}>
@@ -195,16 +181,10 @@ export default function WalletPage() {
           </View>
         </Card>
 
-        <Card contentStyle={styles.positionsCard}>
-          <Text
-            style={[styles.sectionTitle, { color: colors.grey1 || '#1f2a3d' }]}
-          >
-            Minhas posicoes
-          </Text>
+        <Card contentStyle={styles.positionsCard} style={{ marginTop: 16 }}>
+          <Text variant="title">Minhas posicoes</Text>
           {positions.length === 0 ? (
-            <Text style={{ color: colors.grey2 || '#6f819f', marginTop: 12 }}>
-              Nenhuma posicao encontrada.
-            </Text>
+            <Text style={{ marginTop: 12 }}>Nenhuma posicao encontrada.</Text>
           ) : (
             <FlatList
               data={positions}
@@ -358,9 +338,11 @@ function TrendBadge({ value }: { value: number }) {
 
 function MetricBlock({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.metricBlock}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
+    <View style={(styles.metricBlock, { gap: 3 })}>
+      <Text variant="caption" style={{ textTransform: 'uppercase' }}>
+        {label}
+      </Text>
+      <Text variant="subtitle">{value}</Text>
     </View>
   )
 }
@@ -378,7 +360,6 @@ const styles = StyleSheet.create({
   metricsCard: {
     gap: 16,
     padding: 20,
-    borderRadius: 24,
   },
   metricsRow: {
     flexDirection: 'row',
@@ -391,12 +372,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    color: '#8fa1c1',
   },
   metricValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#f3f7ff',
     marginTop: 6,
   },
   movementCard: {
@@ -485,8 +464,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   positionsCard: {
-    marginTop: 16,
-    borderRadius: 24,
     padding: 20,
     gap: 16,
   },
@@ -518,7 +495,6 @@ const styles = StyleSheet.create({
   positionValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#f3f7ff',
   },
   variationRow: {
     flexDirection: 'row',

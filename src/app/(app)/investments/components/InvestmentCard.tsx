@@ -23,14 +23,14 @@ export default function InvestmentCard({ item }: { item: InvestmentItem }) {
       <Card style={{ marginBottom: 20 }}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.name}>{item.nome}</Text>
-            <Text style={styles.symbol}>{item.simbolo}</Text>
+            <Text variant="subtitle">{item.nome}</Text>
+            <Text variant="caption">{item.simbolo}</Text>
           </View>
           <FeatherIcon icon="chevron-right" size={18} color="#888" />
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.price}>
+          <Text variant="body" style={{ fontWeight: 'bold' }}>
             {item.precoAtual.toLocaleString('pt-BR', {
               style: 'currency',
               currency: 'BRL',
@@ -73,26 +73,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  name: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  symbol: {
-    color: '#9ca3af',
-    fontSize: 13,
-    marginTop: 2,
-  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 12,
-  },
-  price: {
-    color: '#f3f4f6',
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginTop: 7,
   },
   variationContainer: {
     flexDirection: 'row',

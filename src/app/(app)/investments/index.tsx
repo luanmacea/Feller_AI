@@ -99,7 +99,9 @@ export default function InvestmentsPage() {
       <Modal open={filterVisible} onClose={() => setFilterVisible(false)}>
         <View style={styles.modalContainer}>
           <FormProvider {...methods}>
-            <Text style={styles.modalTitle}>Filtrar Investimentos</Text>
+            <Text variant="title" style={styles.modalTitle}>
+              Filtrar Investimentos
+            </Text>
 
             <View style={styles.formContent}>
               <TextInput
@@ -174,12 +176,8 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#0b0e13', // fundo dark elegante
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#f3f4f6',
     marginBottom: 24,
     textAlign: 'center',
   },
