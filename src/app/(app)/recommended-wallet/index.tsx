@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -10,7 +9,9 @@ import {
 } from 'react-native'
 
 import { Feather } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
 
+import Alert from '@/components/Alert'
 import Card from '@/components/Card'
 import Container from '@/components/Container'
 import LoadingList from '@/components/LoadingList'
@@ -21,6 +22,7 @@ import api from '@/services/api'
 import type { IRecommendedInvestment } from '@/types/typesCerto'
 
 export default function RecommendedWalletPage() {
+  const router = useRouter()
   const theme = useAppSelector(selectThemeState)
   const isDark = theme.mode === 'dark'
   const colors = theme.colors || {}
@@ -31,6 +33,12 @@ export default function RecommendedWalletPage() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [mounting, setMounting] = useState(false)
+  const [alertVisible, setAlertVisible] = useState(false)
+  const [alertMessage, setAlertMessage] = useState('')
+  const [alertTitle, setAlertTitle] = useState('')
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning'>(
+    'success',
+  )
 
   const fetchRecommendations = useCallback(async () => {
     if (!refreshing) setLoading(true)
@@ -61,30 +69,34 @@ export default function RecommendedWalletPage() {
     if (mounting) return
     setMounting(true)
     try {
-      const { data } = await api.post<{ mensagem?: string; message?: string }>(
-        '/feller/montar-carteira-recomendada',
-      )
+      const { data } = await api.post<{
+        mensagem?: string
+        message?: string
+        titulo?: string
+        title?: string
+      }>('/feller/montar-carteira-recomendada')
 
       const mensagem =
-        (typeof data === 'string' && data) ||
-        data?.mensagem ||
-        data?.message ||
-        'Carteira montada com sucesso!'
+        data?.mensagem || data?.message || 'Carteira montada com sucesso!'
+      const titulo = data?.titulo || data?.title || 'Sucesso'
 
-      Alert.alert('Sucesso', mensagem)
+      setAlertTitle(titulo)
+      setAlertMessage(mensagem)
+      setAlertType('success')
+      setAlertVisible(true)
       fetchRecommendations()
     } catch (error) {
       console.error('Erro ao montar carteira recomendada', error)
-      Alert.alert(
-        'Erro',
+      setAlertTitle('Erro')
+      setAlertMessage(
         'Nao foi possivel montar a carteira recomendada no momento.',
       )
+      setAlertType('error')
+      setAlertVisible(true)
     } finally {
       setMounting(false)
     }
   }
-
-  const contentBackground = isDark ? '#0b111d' : '#f5f7fb'
 
   const listEmptyComponent = useMemo(
     () =>
@@ -122,16 +134,10 @@ export default function RecommendedWalletPage() {
   }
 
   return (
-    <Container
-      style={StyleSheet.flatten([
-        styles.container,
-        { backgroundColor: contentBackground },
-      ])}
-    >
+    <Container style={styles.container}>
       <FlatList
         data={recommendations}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -143,10 +149,7 @@ export default function RecommendedWalletPage() {
           <Card
             variant="flat"
             style={styles.headerCard}
-            contentStyle={StyleSheet.flatten([
-              styles.headerContent,
-              { backgroundColor: isDark ? '#121a2b' : '#ffffff' },
-            ])}
+            contentStyle={StyleSheet.flatten([styles.headerContent])}
           >
             <View style={styles.headerTopRow}>
               <View>
@@ -163,6 +166,8 @@ export default function RecommendedWalletPage() {
                   Sugestoes personalizadas para o seu perfil
                 </Text>
               </View>
+            </View>
+            <View style={{ marginTop: 16, alignItems: 'flex-start' }}>
               <Pressable
                 onPress={handleBuildWallet}
                 disabled={mounting}
@@ -187,51 +192,65 @@ export default function RecommendedWalletPage() {
           </Card>
         }
         ListEmptyComponent={listEmptyComponent}
-        renderItem={({ item }) => (
-          <Card
-            variant="flat"
-            style={styles.itemCard}
-            contentStyle={StyleSheet.flatten([
-              styles.itemContent,
-              { backgroundColor: isDark ? '#101c32' : '#ffffff' },
-            ])}
-          >
-            <View style={styles.itemHeader}>
-              <View style={styles.itemIcon}>
-                <Feather name="trending-up" size={18} color="#4c87ff" />
-              </View>
-              <View style={styles.itemTitle}>
-                <Text
-                  variant="title"
-                  style={{ color: colors.grey1 || '#1f2a3d' }}
-                >
-                  {item.investimentoNome}
-                </Text>
-                <Text
-                  variant="caption"
-                  style={{ color: isDark ? '#9aaecb' : '#5c6f90' }}
-                >
-                  {item.investimentoSimbolo} • {item.categoria} • {item.risco}
-                </Text>
-              </View>
-            </View>
+        renderItem={({ item }) => {
+          const handleOpenDetails = () => {
+            router.push({
+              pathname: '/(app)/investmentDetails',
+              params: { id: String(item.investimentoId) },
+            })
+          }
 
-            <View style={styles.itemDetails}>
-              <InfoBadge
-                label="ID recomendacao"
-                value={String(item.id)}
-                tone={isDark ? '#243354' : '#e0e8ff'}
-                isDark={isDark}
-              />
-              <InfoBadge
-                label="Recomendado em"
-                value={formatDate(item.dataRecomendacao)}
-                tone={isDark ? '#1b2a44' : '#f1f4ff'}
-                isDark={isDark}
-              />
-            </View>
-          </Card>
-        )}
+          return (
+            <Pressable onPress={handleOpenDetails}>
+              <Card
+                variant="flat"
+                style={styles.itemCard}
+                contentStyle={StyleSheet.flatten([
+                  styles.itemContent,
+                  { backgroundColor: isDark ? '#101c32' : '#ffffff' },
+                ])}
+              >
+                <View style={styles.itemHeader}>
+                  <View style={styles.itemTitle}>
+                    <Text
+                      variant="subtitle"
+                      style={{ color: colors.grey1 || '#1f2a3d' }}
+                      numberOfLines={2}
+                    >
+                      {item.investimentoNome}
+                    </Text>
+                    <Text
+                      variant="caption"
+                      style={{ color: isDark ? '#9aaecb' : '#5c6f90' }}
+                    >
+                      {item.investimentoSimbolo} | {item.categoria} |{' '}
+                      {item.risco}
+                    </Text>
+                  </View>
+                  <Feather
+                    name="chevron-right"
+                    size={18}
+                    color={isDark ? '#9aaecb' : '#5c6f90'}
+                  />
+                </View>
+
+                <View style={styles.itemDetails}>
+                  <Text variant="caption">
+                    Data recomendação: {formatDate(item.dataRecomendacao)}
+                  </Text>
+                </View>
+              </Card>
+            </Pressable>
+          )
+        }}
+      />
+
+      <Alert
+        open={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertVisible(false)}
       />
     </Container>
   )
@@ -249,40 +268,16 @@ function formatDate(value: string | number) {
   })
 }
 
-function InfoBadge({
-  label,
-  value,
-  tone,
-  isDark,
-}: {
-  label: string
-  value: string
-  tone: string
-  isDark: boolean
-}) {
-  const valueColor = isDark ? '#f4f7ff' : '#1f2a3d'
-  return (
-    <View style={StyleSheet.flatten([styles.badge, { backgroundColor: tone }])}>
-      <Text style={styles.badgeLabel}>{label}</Text>
-      <Text style={[styles.badgeValue, { color: valueColor }]}>{value}</Text>
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    gap: 16,
   },
   headerCard: {
     borderWidth: 0,
     shadowOpacity: 0,
     elevation: 0,
     backgroundColor: 'transparent',
+    marginBottom: 12,
   },
   headerContent: {
     borderRadius: 22,
@@ -314,24 +309,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
     elevation: 0,
     backgroundColor: 'transparent',
+    marginBottom: 12,
   },
   itemContent: {
-    borderRadius: 20,
-    padding: 18,
-    gap: 16,
+    borderRadius: 18,
+    padding: 16,
+    gap: 14,
   },
   itemHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: 12,
-  },
-  itemIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4c87ff22',
   },
   itemTitle: {
     flex: 1,
@@ -352,13 +341,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
-    color: '#6d7b95',
   },
   badgeValue: {
     marginTop: 4,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#1f2a3d',
   },
   emptyCard: {
     borderWidth: 0,
