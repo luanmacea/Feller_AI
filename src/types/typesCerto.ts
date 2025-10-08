@@ -70,3 +70,41 @@ export interface ICommentSection {
   totalComentarios: number
   comentarios: IComment[]
 }
+
+export interface IPlaylistItem {
+  id: number
+  nome: string
+  descricao: string
+  criadorNome: string
+  criadorEmail: string
+  tipo: string
+  permiteColaboracao: boolean
+  totalInvestimentos: number
+  totalSeguidores: number
+  dataCriacao: string
+  dataAtualizacao: string
+  isCriador: boolean
+  isFollowing: boolean
+  publica: boolean
+  privada: boolean
+  compartilhada: boolean
+}
+
+export interface IPlaylistDetail extends IPlaylistItem {
+  investimentos: {
+    id: number
+    nome: string
+    simbolo: string
+    categoria: string
+    risco: string
+    precoAtual: string
+    variacaoPercentual: string
+    descricao: string
+    recomendadoParaVoce: boolean
+  }[]
+  seguidores: {
+    id: number
+    nomeUsuario: string
+    email: string
+  }[]
+}
