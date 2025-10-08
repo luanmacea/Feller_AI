@@ -2,7 +2,7 @@ import packageJson from '../../package.json'
 
 const { version } = packageJson
 
-const defaultUri = 'http://54.233.175.222:9716'
+const defaultUri = 'https://projeto-api.arista.com.br'
 
 const uri: { [key: string]: string } = {
   development: defaultUri,
