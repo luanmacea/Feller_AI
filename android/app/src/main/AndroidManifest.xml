@@ -24,8 +24,8 @@
         <action android:name="android.intent.action.VIEW"/>
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="reactnativetypescript"/>
-        <data android:scheme="com.anonymous.reactnativetypescript"/>
+        <data android:scheme="fellerai"/>
+        <data android:scheme="com.anonymous.fellerai"/>
       </intent-filter>
     </activity>
   </application>

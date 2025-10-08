@@ -1,4 +1,4 @@
-package com.anonymous.reactnativetypescript
+package com.anonymous.fellerai
 
 import android.app.Application
 import android.content.res.Configuration

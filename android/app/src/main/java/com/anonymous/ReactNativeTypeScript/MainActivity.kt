@@ -1,4 +1,4 @@
-package com.anonymous.reactnativetypescript
+package com.anonymous.fellerai
 
 import android.os.Build
 import android.os.Bundle
