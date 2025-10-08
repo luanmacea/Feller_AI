@@ -16,7 +16,16 @@ export default function AppLayout() {
   const user = useAppSelector(selectUser)
   const theme = useAppSelector(selectThemeState)
   const pathname = usePathname()
-  const screenName = pathname.replace(/^\//, '') + '/index'
+  let screenName = pathname.replace(/^\//, '') + '/index'
+
+  if (screenName.startsWith('playlists/') && screenName !== 'playlists/index') {
+    const parts = screenName.split('/')
+    if (parts.length >= 3) {
+      parts[1] = '[id]'
+      screenName = parts.join('/')
+    }
+  }
+
   const options = navigationScreensOptions[screenName] || {}
   const router = useRouter()
   const insets = useSafeAreaInsets()
