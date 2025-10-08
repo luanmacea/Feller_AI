@@ -27,12 +27,6 @@ interface Message {
 
 const INITIAL_MESSAGES: Message[] = [
   {
-    id: '2',
-    role: 'assistant',
-    content:
-      'Bem-vindo ao assistente virtual! Envie suas perguntas e eu responderei o quanto antes.',
-  },
-  {
     id: '1',
     role: 'assistant',
     content:
