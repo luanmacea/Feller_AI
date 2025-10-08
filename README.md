@@ -40,7 +40,6 @@ Inclui:
 | **Chocolatey**  | <https://chocolatey.org/install>               |
 | **Node.js 18+** | `choco install nodejs-lts`                     |
 | **Yarn**        | `npm install -g yarn`                          |
-| **json-server** | `npm install -g json-server`                   |
 | **Expo CLI**    | `npm install -g expo-cli`                      |
 | **Depcheck**    | `npm install -g depcheck`                      |
 
@@ -57,13 +56,7 @@ Inclui:
 yarn
 ```
 
-2. Rodar banco de dados local em novo terminal:
-
-```bash
-json-server --watch db.json --port 3000
-```
-
-3. Rode o app:
+2. Rode o app:
 
 ```bash
 npx expo start
