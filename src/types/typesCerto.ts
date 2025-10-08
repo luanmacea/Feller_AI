@@ -29,6 +29,7 @@ export interface IWalletSummary {
   quantidadePosicoes: number
   posicoes: Array<{
     id: number
+    investimentoId: number
     nomeInvestimento: string
     simboloInvestimento: string
     categoria: string

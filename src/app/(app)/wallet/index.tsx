@@ -192,7 +192,9 @@ export default function WalletPage() {
               scrollEnabled={false}
               ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
               renderItem={({ item }) => (
-                <Pressable onPress={() => handleSelectInvestment(item.id)}>
+                <Pressable
+                  onPress={() => handleSelectInvestment(item.investimentoId)}
+                >
                   <Card
                     style={styles.positionCard}
                     contentStyle={StyleSheet.flatten([
