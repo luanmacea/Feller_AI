@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   Pressable,
   ScrollView,
@@ -18,7 +18,11 @@ import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import type { ICommentSection, InvestmentItem } from '@/types/typesCerto'
+import type {
+  IComment,
+  ICommentSection,
+  InvestmentItem,
+} from '@/types/typesCerto'
 
 interface TrendPoint {
   label: string
@@ -47,8 +51,8 @@ export default function InvestmentDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [comments, setComments] = useState<ICommentSection | null>(null)
   const [newComment, setNewComment] = useState('')
-  // const [replyText, setReplyText] = useState('')
-  // const [replyTarget, setReplyTarget] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [replyTarget, setReplyTarget] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchInvestment = async () => {
@@ -101,26 +105,80 @@ export default function InvestmentDetailsPage() {
   const handleDeleteComment = async (comentarioId: string) => {
     try {
       await api.delete(`/comentarios/${comentarioId}`)
+      if (replyTarget === Number(comentarioId)) {
+        setReplyTarget(null)
+        setReplyText('')
+      }
       fetchComments()
     } catch (err) {
-      console.error('Erro ao deletar comentário', err)
+      console.error('Erro ao deletar comentario', err)
     }
   }
 
-  // const handleReply = async (comentarioId: string) => {
-  //   if (!replyText.trim()) return
-  //   try {
-  //     await api.post('/comentarios/responder', {
-  //       comentarioId,
-  //       conteudo: replyText.trim(),
-  //     })
-  //     setReplyText('')
-  //     setReplyTarget(null)
-  //     fetchComments()
-  //   } catch (err) {
-  //     console.error('Erro ao responder comentário', err)
-  //   }
-  // }
+  const handleReply = async (comentarioId: number) => {
+    if (!replyText.trim()) return
+    try {
+      await api.post('/comentarios', {
+        investimentoId: id,
+        conteudo: replyText.trim(),
+        comentarioPaiId: comentarioId,
+      })
+      setReplyText('')
+      setReplyTarget(null)
+      fetchComments()
+    } catch (err) {
+      console.error('Erro ao responder comentario', err)
+    }
+  }
+
+  const rootComments = useMemo(
+    () =>
+      (comments?.comentarios ?? []).filter(
+        (comment) => comment.comentarioPaiId === null,
+      ),
+    [comments],
+  )
+
+  const renderReplies = (
+    replyList: IComment[] | undefined,
+    depth = 1,
+  ): React.ReactNode => {
+    if (!replyList?.length) return null
+
+    return replyList.map((reply) => {
+      const ehAutorResposta = reply.usuarioId === user?.id
+      return (
+        <View
+          key={reply.id}
+          style={[
+            styles.replyBlock,
+            {
+              marginLeft: depth * 20,
+              borderLeftColor: depth > 1 ? '#4c87ff22' : '#4c87ff44',
+              marginBottom: 10,
+            },
+          ]}
+        >
+          <View style={styles.commentHeader}>
+            <Text variant="subtitle" style={{ fontWeight: 'bold' }}>
+              {reply.nomeUsuario}
+            </Text>
+            <Text variant="caption">{formatDate(reply.dataCriacao)}</Text>
+          </View>
+          <Text style={styles.commentText}>{reply.conteudo}</Text>
+          {ehAutorResposta && (
+            <View style={styles.commentActions}>
+              <Pressable onPress={() => handleDeleteComment(String(reply.id))}>
+                <Text style={[styles.commentAction, { color: '#E15D6E' }]}>
+                  Excluir
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      )
+    })
+  }
 
   const trendData = useMemo(
     () => buildTrend(investment?.variacaoPercentual ?? 0),
@@ -302,9 +360,10 @@ export default function InvestmentDetailsPage() {
           </View>
 
           {/* Lista de comentários */}
-          {comments &&
-            comments.comentarios.map((comment) => {
+          {rootComments.length > 0 ? (
+            rootComments.map((comment) => {
               const ehAutor = comment.usuarioId === user?.id
+              const isReplying = replyTarget === comment.id
               return (
                 <View key={comment.id} style={styles.commentBlock}>
                   <View style={styles.commentHeader}>
@@ -319,8 +378,12 @@ export default function InvestmentDetailsPage() {
 
                   <View style={styles.commentActions}>
                     <Pressable
-                      // onPress={() => setReplyTarget(String(comment.id))}
-                      onPress={() => console.log('teste')}
+                      onPress={() => {
+                        setReplyText('')
+                        setReplyTarget((prev) =>
+                          prev === comment.id ? null : comment.id,
+                        )
+                      }}
                     >
                       <Text style={styles.commentAction}>Responder</Text>
                     </Pressable>
@@ -337,16 +400,9 @@ export default function InvestmentDetailsPage() {
                     )}
                   </View>
 
-                  {/* Respostas */}
-                  {/* {comment.respostas?.map((resp) => (
-                    <View key={resp.id} style={styles.replyBlock}>
-                      <Text style={styles.replyAuthor}>{resp.autor}</Text>
-                      <Text style={styles.replyText}>{resp.conteudo}</Text>
-                    </View>
-                  ))} */}
+                  {renderReplies(comment.respostas)}
 
-                  {/* Campo de resposta */}
-                  {/* {replyTarget === comment.id && (
+                  {isReplying && (
                     <View style={styles.replyInputContainer}>
                       <TextInput
                         style={[
@@ -369,10 +425,18 @@ export default function InvestmentDetailsPage() {
                         />
                       </Pressable>
                     </View>
-                  )} */}
+                  )}
                 </View>
               )
-            })}
+            })
+          ) : (
+            <Text
+              variant="caption"
+              style={{ color: colors.grey4 || '#7a8aa6' }}
+            >
+              Nenhum comentario ainda.
+            </Text>
+          )}
         </Card>
 
         <Pressable onPress={handleTalk} style={{ marginTop: 16 }}>
@@ -717,6 +781,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
     marginTop: 6,
+    marginBottom: 4,
   },
   commentAction: {
     fontSize: 13,
