@@ -47,20 +47,25 @@ export interface IWalletSummary {
 }
 
 export interface IComment {
+  id: number
+  conteudo: string
+  usuarioId: number
+  nomeUsuario: string
+  emailUsuario: string
+  investimentoId: number
+  nomeInvestimento: string
+  simboloInvestimento: string
+  dataCriacao: string
+  dataAtualizacao: string | null
+  editado: boolean
+  ativo: boolean
+  comentarioPaiId: number | null
+  numeroRespostas: number
+  respostas: IComment[]
+}
+
+export interface ICommentSection {
   investimentoId: number
   totalComentarios: number
-  comentarios: Array<{
-    id: number
-    conteudo: string
-    usuarioId: number
-    nomeUsuario: string
-    emailUsuario: string
-    investimentoId: number
-    nomeInvestimento: string
-    simboloInvestimento: string
-    dataCriacao: string
-    dataAtualizacao: string | null
-    editado: boolean
-    ativo: boolean
-  }>
+  comentarios: IComment[]
 }

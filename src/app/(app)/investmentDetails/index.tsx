@@ -18,7 +18,7 @@ import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import type { IComment, InvestmentItem } from '@/types/typesCerto'
+import type { ICommentSection, InvestmentItem } from '@/types/typesCerto'
 
 interface TrendPoint {
   label: string
@@ -45,7 +45,7 @@ export default function InvestmentDetailsPage() {
 
   const [investment, setInvestment] = useState<InvestmentItem | null>(null)
   const [loading, setLoading] = useState(true)
-  const [comments, setComments] = useState<IComment | null>(null)
+  const [comments, setComments] = useState<ICommentSection | null>(null)
   const [newComment, setNewComment] = useState('')
   // const [replyText, setReplyText] = useState('')
   // const [replyTarget, setReplyTarget] = useState<string | null>(null)

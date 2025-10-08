@@ -72,7 +72,7 @@ export default function WalletPage() {
       params: { id: String(id) },
     })
   }
-  // console.log('AAAAAAAAAAAAAAAAAAAA', summary.valorAtualCarteira)
+
   return (
     <Container
       style={StyleSheet.flatten([
