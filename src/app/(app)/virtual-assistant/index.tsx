@@ -16,6 +16,7 @@ import Container from '@/components/Container'
 import Text from '@/components/Text'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
+import api from '@/services/api'
 
 interface Message {
   id: string
@@ -28,7 +29,7 @@ const INITIAL_MESSAGES: Message[] = [
     id: '2',
     role: 'assistant',
     content:
-      'Atualmente a função de chat está em desenvolvimento. Tente novamente mais tarde.',
+      'Bem-vindo ao assistente virtual! Envie suas perguntas e eu responderei o quanto antes.',
   },
   {
     id: '1',
@@ -136,10 +137,15 @@ export default function RecommendationsPage() {
 
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES)
   const [input, setInput] = useState('')
+  const [isSending, setIsSending] = useState(false)
 
-  const handleSend = () => {
+  const appendMessage = (message: Message) => {
+    setMessages((prev) => [message, ...prev])
+  }
+
+  const handleSend = async () => {
     const trimmed = input.trim()
-    if (!trimmed) return
+    if (!trimmed || isSending) return
 
     const userMessage: Message = {
       id: `${Date.now()}-user`,
@@ -147,15 +153,32 @@ export default function RecommendationsPage() {
       content: trimmed,
     }
 
-    const assistantMessage: Message = {
-      id: `${Date.now()}-assistant`,
-      role: 'assistant',
-      content:
-        'Atualmente a função de chat está em desenvolvimento. Tente novamente mais tarde.',
-    }
-
-    setMessages((prev) => [assistantMessage, userMessage, ...prev])
+    appendMessage(userMessage)
     setInput('')
+    setIsSending(true)
+
+    try {
+      const { data } = await api.post<{ response: string; timestamp: number }>(
+        '/feller/chat',
+        { prompt: trimmed },
+      )
+
+      appendMessage({
+        id: `${data.timestamp}-${Math.random()}`,
+        role: 'assistant',
+        content: data.response,
+      })
+    } catch (error) {
+      console.error('Erro ao enviar mensagem para o assistente', error)
+      appendMessage({
+        id: `${Date.now()}-error`,
+        role: 'assistant',
+        content:
+          'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente em instantes.',
+      })
+    } finally {
+      setIsSending(false)
+    }
   }
   // if (!input) {
   //   return (
@@ -253,8 +276,10 @@ export default function RecommendationsPage() {
             style={[
               styles.sendButton,
               { backgroundColor: isDark ? '#2f60ff' : '#1E3AA9' },
+              isSending && { opacity: 0.6 },
             ]}
             onPress={handleSend}
+            disabled={isSending}
           >
             <Feather name="send" size={18} color="#ffffff" />
           </Pressable>
