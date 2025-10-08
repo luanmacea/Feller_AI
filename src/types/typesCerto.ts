@@ -109,3 +109,14 @@ export interface IPlaylistDetail extends IPlaylistItem {
     email: string
   }[]
 }
+
+export interface IRecommendedInvestment {
+  id: number
+  usuarioId: number
+  investimentoId: number
+  investimentoNome: string
+  investimentoSimbolo: string
+  categoria: string
+  risco: string
+  dataRecomendacao: string
+}
