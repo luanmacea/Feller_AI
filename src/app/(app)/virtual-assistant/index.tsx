@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  ActivityIndicator,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -256,6 +257,42 @@ export default function RecommendationsPage() {
           )}
         />
 
+        {isSending && (
+          <View style={styles.typingRow}>
+            <Card
+              variant="flat"
+              style={styles.bubbleCard}
+              contentStyle={[
+                styles.bubbleContent,
+                { backgroundColor: isDark ? '#1f2a44' : '#E0ECFF' },
+              ]}
+            >
+              <View style={styles.typingIndicator}>
+                <ActivityIndicator
+                  size="small"
+                  color={isDark ? '#D9E6FF' : '#1B2B4B'}
+                />
+                <Text
+                  style={[
+                    styles.typingText,
+                    { color: isDark ? '#D9E6FF' : '#1B2B4B' },
+                  ]}
+                >
+                  Assistente digitando...
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.metadata,
+                  { color: isDark ? '#9CB5DD' : '#50658A' },
+                ]}
+              >
+                Assistente Virtual
+              </Text>
+            </Card>
+          </View>
+        )}
+
         <Card
           variant="flat"
           style={styles.inputWrapper}
@@ -346,6 +383,20 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 18,
     gap: 6,
+  },
+  typingRow: {
+    flexDirection: 'row',
+    paddingVertical: 4,
+    justifyContent: 'flex-start',
+  },
+  typingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  typingText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   metadata: {
     marginTop: 6,
