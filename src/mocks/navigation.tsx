@@ -90,6 +90,14 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: false,
     icon: <Feather name="folder" size={24} color="grey" />,
   },
+  'recommended-wallet/index': {
+    title: 'Carteira Recomendada',
+    headerShown: true,
+    headerBackVisible: true,
+    showInFooter: false,
+    isApp: true,
+    icon: <Feather name="trending-up" size={24} color="grey" />,
+  },
   'menu/index': {
     title: 'Menu',
     headerShown: false,
