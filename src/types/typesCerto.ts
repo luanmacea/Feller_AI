@@ -120,3 +120,9 @@ export interface IRecommendedInvestment {
   risco: string
   dataRecomendacao: string
 }
+
+export interface ISelectablePlaylist {
+  playlistId: number
+  nomePlaylist: string
+  pertenceAPlaylist: boolean
+}
