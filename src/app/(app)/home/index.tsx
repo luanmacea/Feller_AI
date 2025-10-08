@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,12 +14,11 @@ import { useRouter } from 'expo-router'
 import Card from '@/components/Card'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
-import { summary, walletMock } from '@/mocks/investmentMocks'
 import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import { InvestmentItem } from '@/types/typesCerto'
+import type { InvestmentItem, IWalletSummary } from '@/types/typesCerto'
 
 interface SparklineProps {
   data: number[]
@@ -69,14 +69,20 @@ export default function HomePage() {
 
   const displayName = user?.nomeUsuario?.split(' ')[0] || 'Investidor'
 
-  const balance = walletMock.balance
+  const [walletSummary, setWalletSummary] = useState<IWalletSummary | null>(
+    null,
+  )
+  const [walletLoading, setWalletLoading] = useState(true)
+
   const balanceFormatter = useMemo(
     () =>
       new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }),
     [],
   )
-  const formattedBalance = balanceFormatter.format(balance)
-  const portfolioVariation = summary.portfolioChange
+
+  const portfolioValue = walletSummary?.valorAtualCarteira ?? 0
+  const formattedBalance = balanceFormatter.format(portfolioValue)
+  const portfolioVariation = walletSummary?.percentualGanhoCarteira ?? 0
 
   const highlightBackground = useMemo(
     () => (isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(17, 17, 24, 0.06)'),
@@ -84,6 +90,31 @@ export default function HomePage() {
   )
 
   const [stockData, setStockData] = useState<TopStockItem[]>([])
+  const positiveHighlights = useMemo(() => {
+    const positions = walletSummary?.posicoes ?? []
+    return positions
+      .filter((p) => p.percentualGanhoPerda > 0)
+      .sort((a, b) => b.percentualGanhoPerda - a.percentualGanhoPerda)
+      .slice(0, 2)
+  }, [walletSummary?.posicoes])
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      try {
+        const response = await api.get<IWalletSummary>('/carteira', {
+          params: { incluirResumo: true },
+        })
+        setWalletSummary(response.data)
+      } catch (error) {
+        console.error('Erro ao carregar carteira na home', error)
+        setWalletSummary(null)
+      } finally {
+        setWalletLoading(false)
+      }
+    }
+
+    fetchWallet()
+  }, [])
 
   useEffect(() => {
     const fetchStocks = async () => {
@@ -211,25 +242,61 @@ export default function HomePage() {
                 style={[
                   styles.portfolioChipText,
                   {
-                    color:
-                      portfolioVariation >= 0
+                    color: walletLoading
+                      ? colors.grey2 || '#5c6f90'
+                      : portfolioVariation >= 0
                         ? theme?.colors?.success || 'green'
                         : theme?.colors?.error || 'red',
                   },
                 ]}
               >
-                {portfolioVariation.toFixed(1)}%
+                {walletLoading
+                  ? '--'
+                  : `${portfolioVariation >= 0 ? '+' : ''}${portfolioVariation.toFixed(1)}%`}
               </Text>
             </Card>
           </View>
 
-          <Text style={[styles.portfolioValue]}>{formattedBalance}</Text>
+          <Text style={[styles.portfolioValue]}>
+            {walletLoading ? '...' : formattedBalance}
+          </Text>
           <Text>Evolucao acumulada nos ultimos 12 meses</Text>
 
           <View style={styles.portfolioHighlights}>
-            {summary.actives.slice(0, 2).map((item) => (
+            {walletLoading ? (
+              <ActivityIndicator
+                color={colors.primary || '#4c87ff'}
+                size="small"
+              />
+            ) : positiveHighlights.length ? (
+              positiveHighlights.map((position) => {
+                const variation = position.percentualGanhoPerda
+                return (
+                  <Card
+                    key={position.id}
+                    variant="flat"
+                    style={styles.highlightCard}
+                    contentStyle={[
+                      styles.highlightContent,
+                      { backgroundColor: highlightBackground },
+                    ]}
+                  >
+                    <Text style={styles.highlightLabel}>
+                      {position.nomeInvestimento}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.highlightValue,
+                        { color: theme?.colors?.success || '#44C18C' },
+                      ]}
+                    >
+                      +{variation.toFixed(2)}%
+                    </Text>
+                  </Card>
+                )
+              })
+            ) : (
               <Card
-                key={item.name}
                 variant="flat"
                 style={styles.highlightCard}
                 contentStyle={[
@@ -237,22 +304,17 @@ export default function HomePage() {
                   { backgroundColor: highlightBackground },
                 ]}
               >
-                <Text style={[styles.highlightLabel]}>{item.name}</Text>
+                <Text style={styles.highlightLabel}>Sem ganhos positivos</Text>
                 <Text
                   style={[
                     styles.highlightValue,
-                    {
-                      color: item.isPositive
-                        ? theme?.colors?.success
-                        : theme?.colors?.error,
-                    },
+                    { color: colors.grey2 || '#5c6f90' },
                   ]}
                 >
-                  {item.variation > 0 ? '+' : ''}
-                  {item.variation.toFixed(1)}%
+                  --
                 </Text>
               </Card>
-            ))}
+            )}
           </View>
         </Card>
 
@@ -395,8 +457,10 @@ const styles = StyleSheet.create({
   portfolioHighlights: {
     flexDirection: 'row',
     gap: 16,
+    flexWrap: 'wrap',
   },
   highlightCard: {
+    minWidth: '45%',
     flex: 1,
     borderWidth: 0,
     shadowOpacity: 0,
