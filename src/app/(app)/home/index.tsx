@@ -282,7 +282,7 @@ export default function HomePage() {
                     ]}
                   >
                     <Text style={styles.highlightLabel}>
-                      {position.nomeInvestimento}
+                      {position.simboloInvestimento}
                     </Text>
                     <Text
                       style={[
