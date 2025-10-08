@@ -24,7 +24,7 @@ import api from '@/services/api'
 import type {
   IComment,
   ICommentSection,
-  IPlaylistItem,
+  ISelectablePlaylist,
   InvestmentItem,
 } from '@/types/typesCerto'
 
@@ -59,16 +59,18 @@ export default function InvestmentDetailsPage() {
   const [newComment, setNewComment] = useState('')
   const [replyText, setReplyText] = useState('')
   const [replyTarget, setReplyTarget] = useState<number | null>(null)
-  const [playlists, setPlaylists] = useState<IPlaylistItem[]>([])
+  const [playlists, setPlaylists] = useState<ISelectablePlaylist[]>([])
   const [playlistsLoading, setPlaylistsLoading] = useState(false)
   const [playlistModalVisible, setPlaylistModalVisible] = useState(false)
   const [playlistActionLoading, setPlaylistActionLoading] = useState(false)
 
-  async function fetchUserPlaylists() {
+  async function fetchInvestmentPlaylists() {
     if (!user?.id) return
     setPlaylistsLoading(true)
     try {
-      const response = await api.get<IPlaylistItem[]>('/playlists/minhas')
+      const response = await api.get<ISelectablePlaylist[]>(
+        `/playlists/por-investimento/${investment?.id}`,
+      )
       setPlaylists(response.data ?? [])
     } catch (error) {
       console.error('Erro ao buscar playlists do usuario', error)
@@ -104,17 +106,17 @@ export default function InvestmentDetailsPage() {
   }, [id])
 
   useEffect(() => {
-    if (user?.id) {
-      fetchUserPlaylists()
+    if (user?.id && investment?.id) {
+      fetchInvestmentPlaylists()
     }
-  }, [user?.id])
+  }, [user?.id, investment?.id])
 
   const fetchComments = async () => {
     try {
       const res = await api.get(`/comentarios/investimento/${id}`)
       setComments(res.data)
     } catch (err) {
-      console.error('Erro ao buscar comentários', err)
+      console.error('Erro ao buscar comentÃƒÂ¡rios', err)
     }
   }
 
@@ -128,7 +130,7 @@ export default function InvestmentDetailsPage() {
       setNewComment('')
       fetchComments()
     } catch (err) {
-      console.error('Erro ao adicionar comentário', err)
+      console.error('Erro ao adicionar comentÃƒÂ¡rio', err)
     }
   }
 
@@ -163,7 +165,7 @@ export default function InvestmentDetailsPage() {
 
   const handleOpenPlaylistModal = () => {
     if (!playlists.length && !playlistsLoading) {
-      fetchUserPlaylists()
+      fetchInvestmentPlaylists()
     }
     setPlaylistModalVisible(true)
   }
@@ -176,21 +178,32 @@ export default function InvestmentDetailsPage() {
 
   const handleRefreshPlaylists = () => {
     if (!playlistsLoading) {
-      fetchUserPlaylists()
+      fetchInvestmentPlaylists()
     }
   }
 
-  const handleAddToPlaylist = async (playlistId: number) => {
+  const handleTogglePlaylist = async (
+    playlistId: number,
+    alreadyInPlaylist: boolean,
+  ) => {
     if (!investment?.id) return
     setPlaylistActionLoading(true)
     try {
-      await api.post(`/playlists/${playlistId}/investimentos`, {
-        investimentoId: investment.id,
-      })
-      setAlertMessage('Investimento adicionado a playlist.')
-      setPlaylistModalVisible(false)
+      if (alreadyInPlaylist) {
+        await api.delete(
+          `/playlists/${playlistId}/investimentos/${investment.id}`,
+        )
+        setAlertMessage('Investimento removido da playlist.')
+      } else {
+        await api.post(`/playlists/${playlistId}/investimentos`, {
+          investimentoId: investment.id,
+        })
+        setAlertMessage('Investimento adicionado á playlist.')
+      }
+      fetchInvestmentPlaylists()
     } catch (error) {
-      console.error('Erro ao adicionar investimento na playlist', error)
+      console.error('Erro ao atualizar playlists do investimento', error)
+      setAlertMessage('Nao foi possivel atualizar as playlists.')
     } finally {
       setPlaylistActionLoading(false)
     }
@@ -303,7 +316,8 @@ export default function InvestmentDetailsPage() {
           <View style={{ flex: 1 }}>
             <Text variant="title">{investment.nome}</Text>
             <Text variant="caption">
-              {investment.simbolo} � {investment.categoria.replace('_', ' ')}
+              {investment.simbolo} Ã¯Â¿Â½{' '}
+              {investment.categoria.replace('_', ' ')}
             </Text>
             <Text variant="caption">_{investment.descricao}_</Text>
           </View>
@@ -642,7 +656,7 @@ export default function InvestmentDetailsPage() {
               >
                 {playlists.map((playlistItem) => (
                   <Pressable
-                    key={playlistItem.id}
+                    key={playlistItem.playlistId}
                     style={StyleSheet.flatten([
                       styles.playlistItem,
                       {
@@ -650,7 +664,12 @@ export default function InvestmentDetailsPage() {
                         borderColor: isDark ? '#2f3b55' : '#d2dcf5',
                       },
                     ])}
-                    onPress={() => handleAddToPlaylist(playlistItem.id)}
+                    onPress={() =>
+                      handleTogglePlaylist(
+                        playlistItem.playlistId,
+                        playlistItem.pertenceAPlaylist,
+                      )
+                    }
                     disabled={playlistActionLoading}
                   >
                     <Text
@@ -659,9 +678,13 @@ export default function InvestmentDetailsPage() {
                         { color: isDark ? '#f4f7ff' : '#1f2a3d' },
                       ]}
                     >
-                      {playlistItem.nome}
+                      {playlistItem.nomePlaylist}
                     </Text>
-                    <Feather name="plus" size={16} color="#4c87ff" />
+                    {!playlistItem.pertenceAPlaylist ? (
+                      <Feather name="plus" size={16} color="#4c87ff" />
+                    ) : (
+                      <Feather name="minus" size={16} color="#4c87ff" />
+                    )}
                   </Pressable>
                 ))}
               </ScrollView>
@@ -689,7 +712,7 @@ export default function InvestmentDetailsPage() {
         open={!!alertMessage}
         message={alertMessage}
         onClose={() => setAlertMessage('')}
-        title="Adicionado à playlist"
+        title="Sucesso"
         type="success"
       />
     </Container>
