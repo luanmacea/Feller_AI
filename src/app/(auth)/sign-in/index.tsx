@@ -71,12 +71,12 @@ export default function SignInPage() {
           onPress={methods.handleSubmit(onSubmit)}
         />
 
-        <View style={styles.footer}>
+        {/* <View style={styles.footer}>
           <Text style={styles.footerText}>Não possui uma conta? </Text>
           <TouchableOpacity onPress={() => router.push('sign-up')}>
             <Text style={styles.footerLink}>Cadastre-se</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </FormProvider>
     </Container>
   )
