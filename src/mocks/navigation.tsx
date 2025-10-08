@@ -74,6 +74,14 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: true,
     icon: <Feather name="cpu" size={24} color="grey" />,
   },
+  'playlists/index': {
+    title: 'Playlists',
+    headerShown: true,
+    headerBackVisible: false,
+    showInFooter: false,
+    isApp: true,
+    icon: <Feather name="folder" size={24} color="grey" />,
+  },
   'menu/index': {
     title: 'Menu',
     headerShown: false,

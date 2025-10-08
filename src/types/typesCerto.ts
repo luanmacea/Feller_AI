@@ -18,6 +18,7 @@ export interface InvestmentItem {
   risco: string
   createdAt: string
   updatedAt: string
+  recomendadoParaVoce: boolean
 }
 
 export interface IWalletSummary {
@@ -97,8 +98,8 @@ export interface IPlaylistDetail extends IPlaylistItem {
     simbolo: string
     categoria: string
     risco: string
-    precoAtual: string
-    variacaoPercentual: string
+    precoAtual: number
+    variacaoPercentual: number
     descricao: string
     recomendadoParaVoce: boolean
   }[]

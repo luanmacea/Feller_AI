@@ -25,6 +25,9 @@ export default function InvestmentCard({ item }: { item: InvestmentItem }) {
           <View>
             <Text variant="subtitle">{item.nome}</Text>
             <Text variant="caption">{item.simbolo}</Text>
+            <Text variant="caption" numberOfLines={2}>
+              {item.descricao || 'Sem descricao disponivel.'}
+            </Text>
           </View>
           <FeatherIcon icon="chevron-right" size={18} color="#888" />
         </View>
@@ -62,6 +65,12 @@ export default function InvestmentCard({ item }: { item: InvestmentItem }) {
             </Text>
           </View>
         </View>
+        {item.recomendadoParaVoce && (
+          <View style={styles.recommendedBadge}>
+            <FeatherIcon icon="star" size={14} color="#F2C572" />
+            <Text style={styles.recommendedText}>Recomendado para voce</Text>
+          </View>
+        )}
       </Card>
     </Pressable>
   )
@@ -90,5 +99,20 @@ const styles = StyleSheet.create({
   variation: {
     fontWeight: '600',
     fontSize: 13,
+  },
+  recommendedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: '#F2C57222',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  recommendedText: {
+    color: '#F2C572',
+    fontSize: 12,
+    fontWeight: '600',
   },
 })
