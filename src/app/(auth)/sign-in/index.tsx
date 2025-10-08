@@ -10,8 +10,9 @@ import Container from '@/components/Container'
 import Logo from '@/components/Logo'
 import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
+import { selectAuthState } from '@/redux/features/auth/authSelectors'
 import { signIn } from '@/redux/features/auth/authThunk'
-import { useAppDispatch } from '@/redux/hook'
+import { useAppDispatch, useAppSelector } from '@/redux/hook'
 
 const SignInSchema = z.object({
   cpf: z.string().min(1, { message: 'Campo de CPF é obrigatório' }),
@@ -22,6 +23,7 @@ const SignInSchema = z.object({
 type SignInInput = z.infer<typeof SignInSchema>
 
 export default function SignInPage() {
+  const auth = useAppSelector(selectAuthState)
   const router = useRouter()
   const dispatch = useAppDispatch()
 
@@ -63,7 +65,11 @@ export default function SignInPage() {
           <Text style={styles.forgotText}>Esqueceu sua senha?</Text>
         </TouchableOpacity>
 
-        <Button title="Login" onPress={methods.handleSubmit(onSubmit)} />
+        <Button
+          title="Login"
+          loading={auth.isLoading}
+          onPress={methods.handleSubmit(onSubmit)}
+        />
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>Não possui uma conta? </Text>
