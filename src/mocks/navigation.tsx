@@ -39,7 +39,7 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     headerShown: true,
     headerBackVisible: true,
     showInFooter: false,
-    isApp: true,
+    isApp: false,
     icon: <Feather name="user" size={24} color="grey" />,
   },
   'wallet/index': {
