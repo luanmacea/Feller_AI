@@ -6,6 +6,7 @@ import { Redirect } from 'expo-router'
 import * as SecureStore from 'expo-secure-store'
 
 import Container from '@/components/Container'
+import FontAwesomeIcon from '@/components/FontAwesomeIcon'
 import { Loading } from '@/components/Loading'
 import Text from '@/components/Text'
 import { LocalStore } from '@/constants/environment-variables'
@@ -71,7 +72,9 @@ export default function LoadingPage() {
 
   return (
     <Container style={styles.container}>
-      <Text style={styles.icon}>👍</Text>
+      <Text style={styles.icon}>
+        <FontAwesomeIcon icon="money" size={64} color="#e2f867" />
+      </Text>
       <Text variant="title">Bem vindo!</Text>
       <Text variant="subtitle">Carregando suas informações...</Text>
       <Loading />

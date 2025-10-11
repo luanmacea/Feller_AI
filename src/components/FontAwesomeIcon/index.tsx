@@ -10,19 +10,21 @@ interface FontAwesomeIconProps {
   icon: ComponentProps<typeof FontAwesome>['name']
   size?: number
   style?: ViewStyle
+  color?: string
 }
 
 export default function FontAwesomeIcon({
   icon,
   size = 20,
   style,
+  color,
 }: FontAwesomeIconProps) {
   const theme = useAppSelector(selectThemeState)
   return (
     <FontAwesome
       name={icon}
       size={size}
-      color={theme.colors?.grey2}
+      color={color || theme.colors?.grey2}
       style={style}
     />
   )

@@ -192,7 +192,6 @@ export default function RecommendationsPage() {
     <Container
       style={{
         ...styles.container,
-        backgroundColor: isDark ? '#0c111d' : '#f3f7ff',
       }}
     >
       <KeyboardAvoidingView
