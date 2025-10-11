@@ -35,7 +35,6 @@ export default function WalletPage() {
         const response = await api.get<IWalletSummary>('/carteira', {
           params: { incluirResumo: true },
         })
-        console.log('Resumo da carteira:', response.data)
         setSummary(response.data)
       } catch (error) {
         console.error('Erro ao carregar carteira', error)
