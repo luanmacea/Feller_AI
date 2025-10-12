@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
+  Animated,
   FlatList,
   Pressable,
   Share,
@@ -8,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import { Swipeable } from 'react-native-gesture-handler'
 
 import { Feather } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
@@ -48,6 +50,7 @@ export default function PlaylistsPage() {
     {},
   )
   const [creating, setCreating] = useState(false)
+  const swipeableRefs = useRef(new Map<number, Swipeable | null>())
 
   const accentColor = '#F2C572'
   const headerBackground = isDark ? '#050A1A' : '#111827'
@@ -57,6 +60,27 @@ export default function PlaylistsPage() {
   const borderColor = isDark
     ? 'rgba(248, 250, 252, 0.06)'
     : 'rgba(15, 23, 42, 0.08)'
+
+  const registerSwipeable = useCallback((id: number, ref: Swipeable | null) => {
+    if (ref) {
+      swipeableRefs.current.set(id, ref)
+    } else {
+      swipeableRefs.current.delete(id)
+    }
+  }, [])
+
+  const closeSwipeable = useCallback((id: number) => {
+    const instance = swipeableRefs.current.get(id)
+    instance?.close()
+  }, [])
+
+  const closeOtherSwipeables = useCallback((currentId: number) => {
+    swipeableRefs.current.forEach((instance, key) => {
+      if (key !== currentId) {
+        instance?.close()
+      }
+    })
+  }, [])
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -219,6 +243,97 @@ export default function PlaylistsPage() {
     [performDeletePlaylist],
   )
 
+  const renderSwipeActions = useCallback(
+    (
+      item: IPlaylistItem,
+      progress: Animated.AnimatedInterpolation<string | number>,
+    ) => {
+      const isBusy = !!actionLoading[item.id]
+      const actions: JSX.Element[] = []
+
+      const shareTranslate = progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [80, 0],
+      })
+
+      actions.push(
+        <Animated.View
+          key="share"
+          style={[
+            styles.swipeAction,
+            styles.shareAction,
+            { transform: [{ translateX: shareTranslate }] },
+          ]}
+        >
+          <Pressable
+            onPress={() => {
+              closeSwipeable(item.id)
+              handleShare(item)
+            }}
+            disabled={isBusy}
+            style={({ pressed }) => [
+              styles.swipeButton,
+              pressed && styles.swipeButtonPressed,
+              isBusy && styles.swipeButtonDisabled,
+            ]}
+          >
+            <Feather name="share-2" size={20} color="#FFFFFF" />
+          </Pressable>
+        </Animated.View>,
+      )
+
+      if (item.isCriador) {
+        const deleteTranslate = progress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [120, 0],
+        })
+
+        actions.push(
+          <Animated.View
+            key="delete"
+            style={[
+              styles.swipeAction,
+              styles.deleteAction,
+              { transform: [{ translateX: deleteTranslate }] },
+            ]}
+          >
+            <Pressable
+              onPress={() => {
+                closeSwipeable(item.id)
+                handleDelete(item)
+              }}
+              disabled={isBusy}
+              style={({ pressed }) => [
+                styles.swipeButton,
+                pressed && styles.swipeButtonPressed,
+                isBusy && styles.swipeButtonDisabled,
+              ]}
+            >
+              <Feather name="trash-2" size={20} color="#FFFFFF" />
+            </Pressable>
+          </Animated.View>,
+        )
+      }
+
+      return (
+        <View style={styles.swipeActionsWrapper}>
+          {actions.map((action, index) => (
+            <View
+              key={index}
+              style={[
+                styles.swipeActionSlot,
+                index === 0 && styles.swipeActionSlotFirst,
+              ]}
+            >
+              {action}
+            </View>
+          ))}
+        </View>
+      )
+    },
+    [actionLoading, closeSwipeable, handleDelete, handleShare],
+  )
+
   const handleCreatePlaylist = useCallback(async () => {
     if (creating) {
       return
@@ -272,165 +387,149 @@ export default function PlaylistsPage() {
       const isBusy = actionLoading[item.id]
 
       return (
-        <Card
-          variant="flat"
-          style={[styles.cardWrapper, { borderColor }]}
-          contentStyle={[
-            styles.cardContent,
-            { backgroundColor: surfaceColor, borderColor },
-          ]}
+        <Swipeable
+          ref={(ref: Swipeable | null) => registerSwipeable(item.id, ref)}
+          overshootRight={false}
+          friction={1.8}
+          rightThreshold={40}
+          onSwipeableWillOpen={() => closeOtherSwipeables(item.id)}
+          renderRightActions={(
+            progress: Animated.AnimatedInterpolation<string | number>,
+          ) => renderSwipeActions(item, progress)}
         >
-          <Pressable
-            onPress={() => handleOpenPlaylist(item.id)}
-            style={styles.cardPressable}
+          <Card
+            variant="flat"
+            style={[styles.cardWrapper, { borderColor }]}
+            contentStyle={[
+              styles.cardContent,
+              { backgroundColor: surfaceColor, borderColor },
+            ]}
           >
-            <View style={styles.cardHeader}>
-              <View style={styles.cardTitleBlock}>
-                <Text
-                  variant="title"
-                  style={[styles.cardTitle, { color: lightTextColor }]}
-                >
-                  {item.nome}
-                </Text>
-                <Text
-                  variant="body"
-                  style={[styles.cardDescription, { color: mutedTextColor }]}
-                  numberOfLines={2}
-                >
-                  {item.descricao || 'Playlist sem descrição.'}
-                </Text>
-              </View>
-              <Feather name="chevron-right" size={20} color={accentColor} />
-            </View>
-
-            <View style={styles.metaRow}>
-              <View style={[styles.metaPill, { borderColor }]}>
-                <Feather name="layers" size={14} color={accentColor} />
-                <Text
-                  variant="caption"
-                  style={[styles.metaText, { color: lightTextColor }]}
-                >
-                  {item.totalInvestimentos} investimentos
-                </Text>
-              </View>
-
-              <View style={[styles.metaPill, { borderColor }]}>
-                <Feather name="users" size={14} color={accentColor} />
-                <Text
-                  variant="caption"
-                  style={[styles.metaText, { color: lightTextColor }]}
-                >
-                  {item.totalSeguidores} seguidores
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.creatorRow}>
-              <Feather name="user" size={14} color={mutedTextColor} />
-              <Text
-                variant="caption"
-                style={[styles.creatorText, { color: mutedTextColor }]}
-              >
-                {isOwner ? 'Criada por você' : `Criada por ${item.criadorNome}`}
-              </Text>
-            </View>
-
-            {!!badges.length && (
-              <View style={styles.badgeRow}>
-                {badges.map((badge) => (
-                  <View
-                    key={badge.label}
-                    style={[
-                      styles.badge,
-                      { backgroundColor: badge.background },
-                    ]}
-                  >
-                    <Text
-                      variant="caption"
-                      style={[styles.badgeText, { color: badge.color }]}
-                    >
-                      {badge.label}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </Pressable>
-
-          <View style={styles.actionsRow}>
-            {canFollow && (
-              <Pressable
-                style={[
-                  styles.actionButton,
-                  item.isFollowing && {
-                    backgroundColor: accentColor,
-                  },
-                ]}
-                onPress={() => handleToggleFollow(item)}
-                disabled={isBusy}
-              >
-                <Feather
-                  name={item.isFollowing ? 'check' : 'plus'}
-                  size={16}
-                  color={item.isFollowing ? '#0F172A' : accentColor}
-                />
-                <Text
-                  variant="caption"
-                  style={[
-                    styles.actionText,
-                    item.isFollowing
-                      ? { color: '#0F172A' }
-                      : { color: accentColor },
-                  ]}
-                >
-                  {item.isFollowing ? 'Deixar de seguir' : 'Seguir'}
-                </Text>
-              </Pressable>
-            )}
-
             <Pressable
-              style={styles.actionButton}
-              onPress={() => handleShare(item)}
-              disabled={isBusy}
+              onPress={() => handleOpenPlaylist(item.id)}
+              style={styles.cardPressable}
             >
-              <Feather name="share-2" size={16} color={accentColor} />
-              <Text
-                variant="caption"
-                style={[styles.actionText, { color: accentColor }]}
-              >
-                Compartilhar
-              </Text>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardTitleBlock}>
+                  <Text
+                    variant="title"
+                    style={[styles.cardTitle, { color: lightTextColor }]}
+                  >
+                    {item.nome}
+                  </Text>
+                  <Text
+                    variant="body"
+                    style={[styles.cardDescription, { color: mutedTextColor }]}
+                    numberOfLines={2}
+                  >
+                    {item.descricao || 'Playlist sem descrição.'}
+                  </Text>
+                </View>
+                <Feather name="chevron-right" size={20} color={accentColor} />
+              </View>
+
+              <View style={styles.metaRow}>
+                <View style={[styles.metaPill, { borderColor }]}>
+                  <Feather name="layers" size={14} color={accentColor} />
+                  <Text
+                    variant="caption"
+                    style={[styles.metaText, { color: lightTextColor }]}
+                  >
+                    {item.totalInvestimentos} investimentos
+                  </Text>
+                </View>
+
+                <View style={[styles.metaPill, { borderColor }]}>
+                  <Feather name="users" size={14} color={accentColor} />
+                  <Text
+                    variant="caption"
+                    style={[styles.metaText, { color: lightTextColor }]}
+                  >
+                    {item.totalSeguidores} seguidores
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.creatorRow}>
+                <Feather name="user" size={14} color={mutedTextColor} />
+                <Text
+                  variant="caption"
+                  style={[styles.creatorText, { color: mutedTextColor }]}
+                >
+                  {isOwner
+                    ? 'Criada por você'
+                    : `Criada por ${item.criadorNome}`}
+                </Text>
+              </View>
+
+              {!!badges.length && (
+                <View style={styles.badgeRow}>
+                  {badges.map((badge) => (
+                    <View
+                      key={badge.label}
+                      style={[
+                        styles.badge,
+                        { backgroundColor: badge.background },
+                      ]}
+                    >
+                      <Text
+                        variant="caption"
+                        style={[styles.badgeText, { color: badge.color }]}
+                      >
+                        {badge.label}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </Pressable>
 
-            {isOwner && (
-              <Pressable
-                style={[styles.actionButton, styles.deleteButton]}
-                onPress={() => handleDelete(item)}
-                disabled={isBusy}
-              >
-                <Feather name="trash-2" size={16} color="#F87171" />
-                <Text
-                  variant="caption"
-                  style={[styles.actionText, { color: '#F87171' }]}
+            {canFollow && (
+              <View style={styles.actionsRow}>
+                <Pressable
+                  style={[
+                    styles.actionButton,
+                    item.isFollowing && {
+                      backgroundColor: accentColor,
+                    },
+                  ]}
+                  onPress={() => handleToggleFollow(item)}
+                  disabled={isBusy}
                 >
-                  Excluir
-                </Text>
-              </Pressable>
+                  <Feather
+                    name={item.isFollowing ? 'check' : 'plus'}
+                    size={16}
+                    color={item.isFollowing ? '#0F172A' : accentColor}
+                  />
+                  <Text
+                    variant="caption"
+                    style={[
+                      styles.actionText,
+                      item.isFollowing
+                        ? { color: '#0F172A' }
+                        : { color: accentColor },
+                    ]}
+                  >
+                    {item.isFollowing ? 'Deixar de seguir' : 'Seguir'}
+                  </Text>
+                </Pressable>
+              </View>
             )}
-          </View>
-        </Card>
+          </Card>
+        </Swipeable>
       )
     },
     [
       actionLoading,
       accentColor,
       borderColor,
-      handleDelete,
       handleOpenPlaylist,
-      handleShare,
       handleToggleFollow,
       lightTextColor,
       mutedTextColor,
+      registerSwipeable,
+      renderSwipeActions,
+      closeOtherSwipeables,
       surfaceColor,
     ],
   )
@@ -736,6 +835,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  swipeActionsWrapper: {
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    paddingRight: 6,
+  },
+  swipeActionSlot: {
+    width: 68,
+    height: '100%',
+    borderRadius: 22,
+    overflow: 'hidden',
+    marginLeft: 8,
+    alignSelf: 'center',
+  },
+  swipeActionSlotFirst: {
+    marginLeft: 0,
+  },
+  swipeAction: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareAction: {
+    backgroundColor: '#2563EB',
+  },
+  deleteAction: {
+    backgroundColor: '#DC2626',
+  },
+  swipeButton: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  swipeButtonPressed: {
+    opacity: 0.85,
+  },
+  swipeButtonDisabled: {
+    opacity: 0.5,
+  },
   actionsRow: {
     marginTop: 18,
     flexDirection: 'row',
@@ -755,9 +894,6 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontWeight: '600',
-  },
-  deleteButton: {
-    backgroundColor: 'rgba(248, 113, 113, 0.12)',
   },
   separator: {
     height: 16,
