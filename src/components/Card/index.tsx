@@ -9,7 +9,7 @@ import { useAppSelector } from '@/redux/hook'
 
 interface CardProps {
   children: React.ReactNode
-  style?: ViewStyle
+  style?: StyleProp<ViewStyle>
   contentStyle?: StyleProp<ViewStyle>
   variant?: 'gradient' | 'flat'
   gradientColors?: [string, string]
