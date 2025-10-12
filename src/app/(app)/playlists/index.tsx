@@ -25,8 +25,6 @@ import type { IPlaylistItem } from '@/types/typesCerto'
 
 type ViewMode = 'mine' | 'explore'
 
-type BadgeInfo = { label: string; color: string; background: string }
-
 const toggleOptions: Array<{ label: string; value: ViewMode }> = [
   { label: 'Minhas Playlists', value: 'mine' },
   { label: 'Explorar Playlists', value: 'explore' },
@@ -374,17 +372,17 @@ export default function PlaylistsPage() {
   const emptyState = useMemo(
     () =>
       viewMode === 'mine'
-        ? 'Você ainda não possui playlists. Crie a sua com o botão +.'
-        : 'Nenhuma playlist pública encontrada. Tente ajustar sua busca.',
+        ? 'Voce ainda nao possui playlists. Crie a sua com o botao +.'
+        : 'Nenhuma playlist publica encontrada. Tente ajustar sua busca.',
     [viewMode],
   )
-
   const renderPlaylistItem = useCallback(
     ({ item }: { item: IPlaylistItem }) => {
-      const badges = buildBadges(item)
       const isOwner = item.isCriador
       const canFollow = item.publica && !isOwner
       const isBusy = actionLoading[item.id]
+      const showPrivateIcon = item.privada
+      const showSharedIcon = !showPrivateIcon && item.compartilhada
 
       return (
         <Swipeable
@@ -411,77 +409,41 @@ export default function PlaylistsPage() {
             >
               <View style={styles.cardHeader}>
                 <View style={styles.cardTitleBlock}>
-                  <Text
-                    variant="title"
-                    style={[styles.cardTitle, { color: lightTextColor }]}
-                  >
-                    {item.nome}
-                  </Text>
+                  <View style={styles.cardTitleRow}>
+                    <Text
+                      variant="title"
+                      style={[styles.cardTitle, { color: lightTextColor }]}
+                      numberOfLines={1}
+                    >
+                      {item.nome}
+                    </Text>
+                    {showPrivateIcon && (
+                      <Feather
+                        name="lock"
+                        size={16}
+                        color={accentColor}
+                        style={styles.statusIcon}
+                      />
+                    )}
+                    {!showPrivateIcon && showSharedIcon && (
+                      <Feather
+                        name="link"
+                        size={16}
+                        color={accentColor}
+                        style={styles.statusIcon}
+                      />
+                    )}
+                  </View>
                   <Text
                     variant="body"
                     style={[styles.cardDescription, { color: mutedTextColor }]}
                     numberOfLines={2}
                   >
-                    {item.descricao || 'Playlist sem descrição.'}
+                    {item.descricao || 'Playlist sem descricao.'}
                   </Text>
                 </View>
                 <Feather name="chevron-right" size={20} color={accentColor} />
               </View>
-
-              <View style={styles.metaRow}>
-                <View style={[styles.metaPill, { borderColor }]}>
-                  <Feather name="layers" size={14} color={accentColor} />
-                  <Text
-                    variant="caption"
-                    style={[styles.metaText, { color: lightTextColor }]}
-                  >
-                    {item.totalInvestimentos} investimentos
-                  </Text>
-                </View>
-
-                <View style={[styles.metaPill, { borderColor }]}>
-                  <Feather name="users" size={14} color={accentColor} />
-                  <Text
-                    variant="caption"
-                    style={[styles.metaText, { color: lightTextColor }]}
-                  >
-                    {item.totalSeguidores} seguidores
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.creatorRow}>
-                <Feather name="user" size={14} color={mutedTextColor} />
-                <Text
-                  variant="caption"
-                  style={[styles.creatorText, { color: mutedTextColor }]}
-                >
-                  {isOwner
-                    ? 'Criada por você'
-                    : `Criada por ${item.criadorNome}`}
-                </Text>
-              </View>
-
-              {!!badges.length && (
-                <View style={styles.badgeRow}>
-                  {badges.map((badge) => (
-                    <View
-                      key={badge.label}
-                      style={[
-                        styles.badge,
-                        { backgroundColor: badge.background },
-                      ]}
-                    >
-                      <Text
-                        variant="caption"
-                        style={[styles.badgeText, { color: badge.color }]}
-                      >
-                        {badge.label}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
             </Pressable>
 
             {canFollow && (
@@ -533,7 +495,6 @@ export default function PlaylistsPage() {
       surfaceColor,
     ],
   )
-
   const header = (
     <View
       style={[
@@ -648,56 +609,6 @@ export default function PlaylistsPage() {
   )
 }
 
-function buildBadges(item: IPlaylistItem): BadgeInfo[] {
-  const badges: BadgeInfo[] = []
-
-  if (item.isCriador) {
-    badges.push({
-      label: 'Minha playlist',
-      color: '#60A5FA',
-      background: '#60A5FA22',
-    })
-  }
-
-  if (item.permiteColaboracao) {
-    badges.push({
-      label: 'Colaborativa',
-      color: '#34D399',
-      background: '#34D39922',
-    })
-  }
-
-  if (item.publica) {
-    badges.push({
-      label: 'Pública',
-      color: '#F2C572',
-      background: '#F2C57233',
-    })
-  } else if (item.privada) {
-    badges.push({
-      label: 'Privada',
-      color: '#F87171',
-      background: '#F8717122',
-    })
-  } else if (item.compartilhada) {
-    badges.push({
-      label: 'Compartilhada',
-      color: '#a855f7',
-      background: '#a855f722',
-    })
-  }
-
-  if (item.isFollowing && !item.isCriador) {
-    badges.push({
-      label: 'Seguindo',
-      color: '#F2C572',
-      background: '#F2C57222',
-    })
-  }
-
-  return badges
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -770,12 +681,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   cardContent: {
-    borderRadius: 22,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
   },
   cardPressable: {
-    gap: 16,
+    gap: 12,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -787,53 +699,21 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
   },
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  statusIcon: {
+    marginLeft: 4,
+  },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
   },
   cardDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  metaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  metaText: {
-    fontWeight: '600',
-    letterSpacing: 0.2,
-  },
-  creatorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  creatorText: {
     fontSize: 13,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  badge: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
+    lineHeight: 18,
   },
   swipeActionsWrapper: {
     height: '100%',
@@ -876,26 +756,26 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   actionsRow: {
-    marginTop: 18,
+    marginTop: 12,
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
+    alignItems: 'center',
+    gap: 8,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'transparent',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: 'rgba(242, 197, 114, 0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(242, 197, 114, 0.18)',
   },
   actionText: {
     fontWeight: '600',
   },
   separator: {
-    height: 16,
+    height: 12,
   },
 })
