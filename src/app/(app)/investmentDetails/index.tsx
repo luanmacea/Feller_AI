@@ -208,12 +208,7 @@ export default function InvestmentDetailsPage() {
   }
 
   return (
-    <Container
-      style={StyleSheet.flatten([
-        styles.container,
-        { backgroundColor: isDark ? '#0b111d' : '#f5f7fb' },
-      ])}
-    >
+    <Container>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 32 }}
@@ -572,9 +567,6 @@ function MetricBlock({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 0,
-  },
   centered: {
     flex: 1,
     alignItems: 'center',
