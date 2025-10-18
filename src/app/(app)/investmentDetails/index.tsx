@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
-  ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,7 +22,6 @@ import api from '@/services/api'
 import type {
   IComment,
   ICommentSection,
-  ISelectablePlaylist,
   InvestmentItem,
 } from '@/types/typesCerto'
 
@@ -59,26 +56,6 @@ export default function InvestmentDetailsPage() {
   const [newComment, setNewComment] = useState('')
   const [replyText, setReplyText] = useState('')
   const [replyTarget, setReplyTarget] = useState<number | null>(null)
-  const [playlists, setPlaylists] = useState<ISelectablePlaylist[]>([])
-  const [playlistsLoading, setPlaylistsLoading] = useState(false)
-  const [playlistModalVisible, setPlaylistModalVisible] = useState(false)
-  const [playlistActionLoading, setPlaylistActionLoading] = useState(false)
-
-  async function fetchInvestmentPlaylists() {
-    if (!user?.id) return
-    setPlaylistsLoading(true)
-    try {
-      const response = await api.get<ISelectablePlaylist[]>(
-        `/playlists/por-investimento/${investment?.id}`,
-      )
-      setPlaylists(response.data ?? [])
-    } catch (error) {
-      console.error('Erro ao buscar playlists do usuario', error)
-      setPlaylists([])
-    } finally {
-      setPlaylistsLoading(false)
-    }
-  }
 
   useEffect(() => {
     const fetchInvestment = async () => {
@@ -104,12 +81,6 @@ export default function InvestmentDetailsPage() {
   useEffect(() => {
     if (id) fetchComments()
   }, [id])
-
-  useEffect(() => {
-    if (user?.id && investment?.id) {
-      fetchInvestmentPlaylists()
-    }
-  }, [user?.id, investment?.id])
 
   const fetchComments = async () => {
     try {
@@ -160,52 +131,6 @@ export default function InvestmentDetailsPage() {
       fetchComments()
     } catch (err) {
       console.error('Erro ao responder comentario', err)
-    }
-  }
-
-  const handleOpenPlaylistModal = () => {
-    if (!playlists.length && !playlistsLoading) {
-      fetchInvestmentPlaylists()
-    }
-    setPlaylistModalVisible(true)
-  }
-
-  const handleClosePlaylistModal = () => {
-    if (!playlistActionLoading) {
-      setPlaylistModalVisible(false)
-    }
-  }
-
-  const handleRefreshPlaylists = () => {
-    if (!playlistsLoading) {
-      fetchInvestmentPlaylists()
-    }
-  }
-
-  const handleTogglePlaylist = async (
-    playlistId: number,
-    alreadyInPlaylist: boolean,
-  ) => {
-    if (!investment?.id) return
-    setPlaylistActionLoading(true)
-    try {
-      if (alreadyInPlaylist) {
-        await api.delete(
-          `/playlists/${playlistId}/investimentos/${investment.id}`,
-        )
-        setAlertMessage('Investimento removido da playlist.')
-      } else {
-        await api.post(`/playlists/${playlistId}/investimentos`, {
-          investimentoId: investment.id,
-        })
-        setAlertMessage('Investimento adicionado á playlist.')
-      }
-      fetchInvestmentPlaylists()
-    } catch (error) {
-      console.error('Erro ao atualizar playlists do investimento', error)
-      setAlertMessage('Nao foi possivel atualizar as playlists.')
-    } finally {
-      setPlaylistActionLoading(false)
     }
   }
 
@@ -402,45 +327,6 @@ export default function InvestmentDetailsPage() {
 
         <Card
           variant="flat"
-          style={styles.playlistCard}
-          contentStyle={StyleSheet.flatten([
-            styles.playlistContent,
-            { backgroundColor: isDark ? '#121a2b' : '#ffffff' },
-          ])}
-        >
-          <View style={styles.playlistHeader}>
-            <Text
-              style={[
-                styles.sectionTitle,
-                { color: colors.grey1 || '#1f2a3d' },
-              ]}
-            >
-              Playlists
-            </Text>
-            <Pressable
-              style={StyleSheet.flatten([
-                styles.playlistActionButton,
-                { backgroundColor: colors.primary || '#4c87ff' },
-              ])}
-              onPress={handleOpenPlaylistModal}
-            >
-              <Feather name="plus" size={16} color="#f4f7ff" />
-              <Text style={styles.playlistActionText}>Adicionar</Text>
-            </Pressable>
-          </View>
-          <Text
-            variant="caption"
-            style={[
-              styles.playlistHintText,
-              { color: isDark ? '#9aa6c9' : '#7a8aa6' },
-            ]}
-          >
-            Escolha em qual playlist deseja guardar este investimento.
-          </Text>
-        </Card>
-
-        <Card
-          variant="flat"
           style={styles.commentsCard}
           contentStyle={StyleSheet.flatten([
             styles.commentsContent,
@@ -563,7 +449,7 @@ export default function InvestmentDetailsPage() {
             gradientColors={['#2f60ff', '#4c87ff']}
             contentStyle={styles.ctaContent}
           >
-            <View>
+            <View style={{ width: '85%' }}>
               <Text style={styles.ctaTitle}>
                 Conversar com Assistente sobre este ativo
               </Text>
@@ -575,139 +461,6 @@ export default function InvestmentDetailsPage() {
           </Card>
         </Pressable>
       </ScrollView>
-
-      <Modal
-        visible={playlistModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={handleClosePlaylistModal}
-      >
-        <View style={styles.playlistModalOverlay}>
-          <View
-            style={StyleSheet.flatten([
-              styles.playlistModalContent,
-              { backgroundColor: isDark ? '#0f172a' : '#ffffff' },
-            ])}
-          >
-            <View style={styles.playlistModalHeader}>
-              <Text
-                variant="title"
-                style={[
-                  styles.playlistModalTitle,
-                  { color: isDark ? '#f4f7ff' : '#1f2a3d' },
-                ]}
-              >
-                Selecionar playlist
-              </Text>
-              <View style={styles.playlistModalActions}>
-                <Pressable
-                  onPress={handleRefreshPlaylists}
-                  disabled={playlistsLoading}
-                  style={StyleSheet.flatten([
-                    styles.playlistIconButton,
-                    {
-                      backgroundColor: isDark ? '#16233a' : '#ecf2ff',
-                      opacity: playlistsLoading ? 0.6 : 1,
-                    },
-                  ])}
-                >
-                  <Feather
-                    name="refresh-cw"
-                    size={18}
-                    color={playlistsLoading ? '#9aa6c9' : '#4c87ff'}
-                  />
-                </Pressable>
-                <Pressable
-                  onPress={handleClosePlaylistModal}
-                  style={StyleSheet.flatten([
-                    styles.playlistIconButton,
-                    { backgroundColor: isDark ? '#16233a' : '#ecf2ff' },
-                  ])}
-                >
-                  <Feather
-                    name="x"
-                    size={20}
-                    color={isDark ? '#f4f7ff' : '#1f2a3d'}
-                  />
-                </Pressable>
-              </View>
-            </View>
-
-            {playlistsLoading ? (
-              <View style={styles.playlistModalLoading}>
-                <ActivityIndicator
-                  size="small"
-                  color={colors.primary || '#4c87ff'}
-                />
-                <Text
-                  variant="caption"
-                  style={[
-                    styles.playlistLoadingText,
-                    { color: isDark ? '#9aa6c9' : '#7a8aa6' },
-                  ]}
-                >
-                  Carregando playlists...
-                </Text>
-              </View>
-            ) : playlists.length ? (
-              <ScrollView
-                style={styles.playlistList}
-                showsVerticalScrollIndicator={false}
-              >
-                {playlists.map((playlistItem) => (
-                  <Pressable
-                    key={playlistItem.playlistId}
-                    style={StyleSheet.flatten([
-                      styles.playlistItem,
-                      {
-                        backgroundColor: isDark ? '#0f172a' : '#f4f7ff',
-                        borderColor: isDark ? '#2f3b55' : '#d2dcf5',
-                      },
-                    ])}
-                    onPress={() =>
-                      handleTogglePlaylist(
-                        playlistItem.playlistId,
-                        playlistItem.pertenceAPlaylist,
-                      )
-                    }
-                    disabled={playlistActionLoading}
-                  >
-                    <Text
-                      style={[
-                        styles.playlistItemText,
-                        { color: isDark ? '#f4f7ff' : '#1f2a3d' },
-                      ]}
-                    >
-                      {playlistItem.nomePlaylist}
-                    </Text>
-                    {!playlistItem.pertenceAPlaylist ? (
-                      <Feather name="plus" size={16} color="#4c87ff" />
-                    ) : (
-                      <Feather name="minus" size={16} color="#4c87ff" />
-                    )}
-                  </Pressable>
-                ))}
-              </ScrollView>
-            ) : (
-              <Text
-                variant="body"
-                style={[
-                  styles.playlistEmptyText,
-                  { color: isDark ? '#9aa6c9' : '#7a8aa6' },
-                ]}
-              >
-                Nenhuma playlist encontrada.
-              </Text>
-            )}
-
-            {playlistActionLoading && (
-              <View style={styles.playlistActionOverlay}>
-                <ActivityIndicator size="small" color="#f4f7ff" />
-              </View>
-            )}
-          </View>
-        </View>
-      </Modal>
       <Alert
         open={!!alertMessage}
         message={alertMessage}
@@ -964,40 +717,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#f5f7ff',
   },
-  playlistCard: {
-    borderWidth: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-    marginTop: 16,
-    backgroundColor: 'transparent',
-  },
-  playlistContent: {
-    borderRadius: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  playlistHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  playlistActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  playlistActionText: {
-    color: '#f4f7ff',
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  playlistHintText: {
-    color: '#7a8aa6',
-  },
   ctaCard: {
     borderWidth: 0,
     shadowOpacity: 0,
@@ -1103,79 +822,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     gap: 8,
-  },
-  playlistModalOverlay: {
-    flex: 1,
-    backgroundColor: '#00000088',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  playlistModalContent: {
-    width: '100%',
-    borderRadius: 20,
-    padding: 20,
-    position: 'relative',
-    gap: 12,
-  },
-  playlistModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  playlistModalTitle: {
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  playlistModalActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  playlistIconButton: {
-    padding: 8,
-    borderRadius: 999,
-  },
-  playlistModalLoading: {
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 20,
-  },
-  playlistLoadingText: {
-    color: '#7a8aa6',
-  },
-  playlistList: {
-    maxHeight: 260,
-  },
-  playlistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#1f2a3d22',
-    marginBottom: 10,
-  },
-  playlistItemText: {
-    fontSize: 15,
-    color: '#1f2a3d',
-  },
-  playlistEmptyText: {
-    textAlign: 'center',
-    color: '#7a8aa6',
-    paddingVertical: 12,
-  },
-  playlistActionOverlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#00000055',
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 })

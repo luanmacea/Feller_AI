@@ -50,14 +50,6 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     isApp: true,
     icon: <Feather name="dollar-sign" size={24} color="grey" />,
   },
-  'playlists/index': {
-    title: 'Playlists',
-    headerShown: true,
-    headerBackVisible: false,
-    showInFooter: false,
-    isApp: true,
-    icon: <Feather name="folder" size={24} color="grey" />,
-  },
   'investments/index': {
     title: 'Investimentos',
     headerShown: true,
@@ -81,14 +73,6 @@ export const navigationScreensOptions: Record<string, ScreenOption> = {
     showInFooter: true,
     isApp: true,
     icon: <Feather name="cpu" size={24} color="grey" />,
-  },
-  'playlists/[id]/index': {
-    title: 'Detalhes da Playlist',
-    headerShown: true,
-    headerBackVisible: true,
-    showInFooter: false,
-    isApp: false,
-    icon: <Feather name="folder" size={24} color="grey" />,
   },
   'recommended-wallet/index': {
     title: 'Carteira Recomendada',
