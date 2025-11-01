@@ -1,7 +1,6 @@
-import { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
-  Animated,
   FlatList,
   Pressable,
   Share,
@@ -9,14 +8,15 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import { Swipeable } from 'react-native-gesture-handler'
 
 import { Feather } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 
+import Button from '@/components/Button'
 import Card from '@/components/Card'
 import Container from '@/components/Container'
 import LoadingList from '@/components/LoadingList'
+import Modal from '@/components/Modal'
 import Text from '@/components/Text'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
@@ -25,16 +25,11 @@ import type { IPlaylistItem } from '@/types/typesCerto'
 
 type ViewMode = 'mine' | 'explore'
 
-const toggleOptions: Array<{ label: string; value: ViewMode }> = [
-  { label: 'Minhas Playlists', value: 'mine' },
-  { label: 'Explorar Playlists', value: 'explore' },
-]
-
 export default function PlaylistsPage() {
   const router = useRouter()
   const theme = useAppSelector(selectThemeState)
   const colors = theme.colors || {}
-  const isDark = theme.mode === 'dark'
+  // const isDark = theme.mode === 'dark'
 
   const requestIdRef = useRef(0)
 
@@ -48,37 +43,14 @@ export default function PlaylistsPage() {
     {},
   )
   const [creating, setCreating] = useState(false)
-  const swipeableRefs = useRef(new Map<number, Swipeable | null>())
+  const [showSearch, setShowSearch] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
-  const accentColor = '#F2C572'
-  const headerBackground = isDark ? '#050A1A' : '#111827'
-  const surfaceColor = isDark ? '#101726' : '#1F2937'
-  const mutedTextColor = isDark ? '#9AA6C9' : '#9CA3AF'
-  const lightTextColor = isDark ? '#F8FAFC' : '#F1F5F9'
-  const borderColor = isDark
-    ? 'rgba(248, 250, 252, 0.06)'
-    : 'rgba(15, 23, 42, 0.08)'
-
-  const registerSwipeable = useCallback((id: number, ref: Swipeable | null) => {
-    if (ref) {
-      swipeableRefs.current.set(id, ref)
-    } else {
-      swipeableRefs.current.delete(id)
-    }
-  }, [])
-
-  const closeSwipeable = useCallback((id: number) => {
-    const instance = swipeableRefs.current.get(id)
-    instance?.close()
-  }, [])
-
-  const closeOtherSwipeables = useCallback((currentId: number) => {
-    swipeableRefs.current.forEach((instance, key) => {
-      if (key !== currentId) {
-        instance?.close()
-      }
-    })
-  }, [])
+  // Form state
+  const [formNome, setFormNome] = useState('')
+  const [formDescricao, setFormDescricao] = useState('')
+  const [formTipo, setFormTipo] = useState<'PUBLICA' | 'PRIVADA'>('PUBLICA')
+  const [formPermiteColaboracao, setFormPermiteColaboracao] = useState(true)
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -195,9 +167,7 @@ export default function PlaylistsPage() {
           ? `Confira a playlist ${playlist.nome} no InvestApp: ${link}`
           : `Confira a playlist ${playlist.nome} no InvestApp!`
 
-        await Share.share({
-          message,
-        })
+        await Share.share({ message })
       } catch (error) {
         console.error('Erro ao compartilhar playlist', error)
       } finally {
@@ -241,99 +211,28 @@ export default function PlaylistsPage() {
     [performDeletePlaylist],
   )
 
-  const renderSwipeActions = useCallback(
-    (
-      item: IPlaylistItem,
-      progress: Animated.AnimatedInterpolation<string | number>,
-    ) => {
-      const isBusy = !!actionLoading[item.id]
-      const actions: JSX.Element[] = []
+  const resetForm = useCallback(() => {
+    setFormNome('')
+    setFormDescricao('')
+    setFormTipo('PUBLICA')
+    setFormPermiteColaboracao(true)
+  }, [])
 
-      const shareTranslate = progress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [80, 0],
-      })
+  const handleOpenCreateModal = useCallback(() => {
+    resetForm()
+    setShowCreateModal(true)
+  }, [resetForm])
 
-      actions.push(
-        <Animated.View
-          key="share"
-          style={[
-            styles.swipeAction,
-            styles.shareAction,
-            { transform: [{ translateX: shareTranslate }] },
-          ]}
-        >
-          <Pressable
-            onPress={() => {
-              closeSwipeable(item.id)
-              handleShare(item)
-            }}
-            disabled={isBusy}
-            style={({ pressed }) => [
-              styles.swipeButton,
-              pressed && styles.swipeButtonPressed,
-              isBusy && styles.swipeButtonDisabled,
-            ]}
-          >
-            <Feather name="share-2" size={20} color="#FFFFFF" />
-          </Pressable>
-        </Animated.View>,
-      )
-
-      if (item.isCriador) {
-        const deleteTranslate = progress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [120, 0],
-        })
-
-        actions.push(
-          <Animated.View
-            key="delete"
-            style={[
-              styles.swipeAction,
-              styles.deleteAction,
-              { transform: [{ translateX: deleteTranslate }] },
-            ]}
-          >
-            <Pressable
-              onPress={() => {
-                closeSwipeable(item.id)
-                handleDelete(item)
-              }}
-              disabled={isBusy}
-              style={({ pressed }) => [
-                styles.swipeButton,
-                pressed && styles.swipeButtonPressed,
-                isBusy && styles.swipeButtonDisabled,
-              ]}
-            >
-              <Feather name="trash-2" size={20} color="#FFFFFF" />
-            </Pressable>
-          </Animated.View>,
-        )
-      }
-
-      return (
-        <View style={styles.swipeActionsWrapper}>
-          {actions.map((action, index) => (
-            <View
-              key={index}
-              style={[
-                styles.swipeActionSlot,
-                index === 0 && styles.swipeActionSlotFirst,
-              ]}
-            >
-              {action}
-            </View>
-          ))}
-        </View>
-      )
-    },
-    [actionLoading, closeSwipeable, handleDelete, handleShare],
-  )
+  const handleCloseCreateModal = useCallback(() => {
+    setShowCreateModal(false)
+    resetForm()
+  }, [resetForm])
 
   const handleCreatePlaylist = useCallback(async () => {
-    if (creating) {
+    if (creating) return
+
+    if (!formNome.trim()) {
+      Alert.alert('Atenção', 'Por favor, informe um nome para a playlist.')
       return
     }
 
@@ -341,9 +240,13 @@ export default function PlaylistsPage() {
 
     try {
       await api.post('/playlists', {
-        nome: `Nova playlist ${new Date().toLocaleTimeString('pt-BR')}`,
-        descricao: 'Playlist criada a partir do aplicativo.',
+        nome: formNome.trim(),
+        descricao: formDescricao.trim(),
+        tipo: formTipo,
+        permiteColaboracao: formPermiteColaboracao,
       })
+
+      handleCloseCreateModal()
 
       const targetMode: ViewMode = 'mine'
       const nextSearch = ''
@@ -355,10 +258,19 @@ export default function PlaylistsPage() {
       await loadPlaylists(targetMode, nextSearch)
     } catch (error) {
       console.error('Erro ao criar playlist', error)
+      Alert.alert('Erro', 'Não foi possível criar a playlist. Tente novamente.')
     } finally {
       setCreating(false)
     }
-  }, [creating, loadPlaylists])
+  }, [
+    creating,
+    formNome,
+    formDescricao,
+    formTipo,
+    formPermiteColaboracao,
+    handleCloseCreateModal,
+    loadPlaylists,
+  ])
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
@@ -372,212 +284,231 @@ export default function PlaylistsPage() {
   const emptyState = useMemo(
     () =>
       viewMode === 'mine'
-        ? 'Voce ainda nao possui playlists. Crie a sua com o botao +.'
-        : 'Nenhuma playlist publica encontrada. Tente ajustar sua busca.',
+        ? 'Você ainda não possui playlists. Crie a sua com o botão +.'
+        : 'Nenhuma playlist pública encontrada.',
     [viewMode],
   )
+
   const renderPlaylistItem = useCallback(
     ({ item }: { item: IPlaylistItem }) => {
       const isOwner = item.isCriador
-      const canFollow = item.publica && !isOwner
+      const canFollow = viewMode === 'explore' && !isOwner
       const isBusy = actionLoading[item.id]
-      const showPrivateIcon = item.privada
-      const showSharedIcon = !showPrivateIcon && item.compartilhada
 
       return (
-        <Swipeable
-          ref={(ref: Swipeable | null) => registerSwipeable(item.id, ref)}
-          overshootRight={false}
-          friction={1.8}
-          rightThreshold={40}
-          onSwipeableWillOpen={() => closeOtherSwipeables(item.id)}
-          renderRightActions={(
-            progress: Animated.AnimatedInterpolation<string | number>,
-          ) => renderSwipeActions(item, progress)}
-        >
-          <Card
-            variant="flat"
-            style={[styles.cardWrapper, { borderColor }]}
-            contentStyle={[
-              styles.cardContent,
-              { backgroundColor: surfaceColor, borderColor },
+        <Card style={styles.cardWrapper}>
+          <Pressable
+            onPress={() => handleOpenPlaylist(item.id)}
+            onLongPress={() => {
+              if (isOwner) {
+                Alert.alert('Ações', `O que deseja fazer com "${item.nome}"?`, [
+                  { text: 'Cancelar', style: 'cancel' },
+                  {
+                    text: 'Compartilhar',
+                    onPress: () => handleShare(item),
+                  },
+                  {
+                    text: 'Excluir',
+                    style: 'destructive',
+                    onPress: () => handleDelete(item),
+                  },
+                ])
+              }
+            }}
+            style={({ pressed }) => [
+              styles.playlistCard,
+              pressed && styles.playlistCardPressed,
             ]}
           >
-            <Pressable
-              onPress={() => handleOpenPlaylist(item.id)}
-              style={styles.cardPressable}
-            >
-              <View style={styles.cardHeader}>
-                <View style={styles.cardTitleBlock}>
-                  <View style={styles.cardTitleRow}>
-                    <Text
-                      variant="title"
-                      style={[styles.cardTitle, { color: lightTextColor }]}
-                      numberOfLines={1}
-                    >
-                      {item.nome}
-                    </Text>
-                    {showPrivateIcon && (
-                      <Feather
-                        name="lock"
-                        size={16}
-                        color={accentColor}
-                        style={styles.statusIcon}
-                      />
-                    )}
-                    {!showPrivateIcon && showSharedIcon && (
-                      <Feather
-                        name="link"
-                        size={16}
-                        color={accentColor}
-                        style={styles.statusIcon}
-                      />
-                    )}
-                  </View>
-                  <Text
-                    variant="body"
-                    style={[styles.cardDescription, { color: mutedTextColor }]}
-                    numberOfLines={2}
-                  >
-                    {item.descricao || 'Playlist sem descricao.'}
-                  </Text>
-                </View>
-                <Feather name="chevron-right" size={20} color={accentColor} />
+            <View style={styles.playlistImageContainer}>
+              <View
+                style={[
+                  styles.playlistImage,
+                  { backgroundColor: colors.primary },
+                ]}
+              >
+                <Feather name="trending-up" size={32} color={colors.white} />
               </View>
-            </Pressable>
+            </View>
 
-            {canFollow && (
-              <View style={styles.actionsRow}>
+            <View style={styles.playlistInfo}>
+              <View style={styles.playlistHeader}>
+                <Text
+                  variant="body"
+                  style={[styles.playlistName, { color: colors.grey1 }]}
+                  numberOfLines={1}
+                >
+                  {item.nome}
+                </Text>
+                {item.privada && (
+                  <Feather name="lock" size={14} color={colors.grey2} />
+                )}
+                {item.compartilhada && !item.privada && (
+                  <Feather name="users" size={14} color={colors.grey2} />
+                )}
+              </View>
+
+              <View style={styles.playlistMeta}>
+                <Text
+                  variant="caption"
+                  style={[styles.playlistMetaText, { color: colors.grey2 }]}
+                  numberOfLines={1}
+                >
+                  {item.criadorNome}
+                </Text>
+                <View style={[styles.dot, { backgroundColor: colors.grey2 }]} />
+                <Text
+                  variant="caption"
+                  style={[styles.playlistMetaText, { color: colors.grey2 }]}
+                >
+                  {item.totalInvestimentos}{' '}
+                  {item.totalInvestimentos === 1
+                    ? 'investimento'
+                    : 'investimentos'}
+                </Text>
+              </View>
+
+              {canFollow && (
                 <Pressable
+                  onPress={(e) => {
+                    e.stopPropagation()
+                    handleToggleFollow(item)
+                  }}
+                  disabled={isBusy}
                   style={[
-                    styles.actionButton,
-                    item.isFollowing && {
-                      backgroundColor: accentColor,
+                    styles.followButton,
+                    item.isFollowing && { backgroundColor: colors.primary },
+                    !item.isFollowing && {
+                      borderColor: colors.greyOutline,
+                      borderWidth: 1,
                     },
                   ]}
-                  onPress={() => handleToggleFollow(item)}
-                  disabled={isBusy}
                 >
-                  <Feather
-                    name={item.isFollowing ? 'check' : 'plus'}
-                    size={16}
-                    color={item.isFollowing ? '#0F172A' : accentColor}
-                  />
                   <Text
                     variant="caption"
                     style={[
-                      styles.actionText,
-                      item.isFollowing
-                        ? { color: '#0F172A' }
-                        : { color: accentColor },
+                      styles.followButtonText,
+                      { color: item.isFollowing ? colors.black : colors.grey2 },
                     ]}
                   >
-                    {item.isFollowing ? 'Deixar de seguir' : 'Seguir'}
+                    {item.isFollowing ? 'Seguindo' : 'Seguir'}
                   </Text>
                 </Pressable>
-              </View>
-            )}
-          </Card>
-        </Swipeable>
+              )}
+            </View>
+          </Pressable>
+        </Card>
       )
     },
     [
+      viewMode,
       actionLoading,
-      accentColor,
-      borderColor,
+      colors,
       handleOpenPlaylist,
+      handleShare,
+      handleDelete,
       handleToggleFollow,
-      lightTextColor,
-      mutedTextColor,
-      registerSwipeable,
-      renderSwipeActions,
-      closeOtherSwipeables,
-      surfaceColor,
     ],
   )
+
   const header = (
-    <View
-      style={[
-        styles.header,
-        {
-          backgroundColor: headerBackground,
-          borderColor,
-        },
-      ]}
-    >
-      <View style={styles.headerTopRow}>
-        <Text
-          variant="title"
-          style={[styles.headerTitle, { color: lightTextColor }]}
-        >
-          Playlists de Investimentos
-        </Text>
-        <Pressable
-          onPress={handleCreatePlaylist}
-          style={[
-            styles.createButton,
-            { borderColor: accentColor },
-            creating && styles.createButtonDisabled,
-          ]}
-          disabled={creating}
-        >
-          <Feather
-            name="plus"
-            size={18}
-            color={creating ? mutedTextColor : accentColor}
-          />
-        </Pressable>
-      </View>
-
-      <View
-        style={[
-          styles.toggleGroup,
-          { backgroundColor: surfaceColor, borderColor },
-        ]}
-      >
-        {toggleOptions.map((option) => {
-          const active = viewMode === option.value
-          return (
-            <Pressable
-              key={option.value}
-              onPress={() => {
-                if (!active) {
-                  setViewMode(option.value)
-                }
-              }}
-              style={[
-                styles.toggleButton,
-                active && { backgroundColor: accentColor },
-              ]}
+    <View style={[styles.header, { backgroundColor: colors.grey0 }]}>
+      <View style={styles.headerTop}>
+        <View style={styles.headerLeft}>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
+            <Text
+              variant="title"
+              style={[styles.avatarText, { color: colors.white }]}
             >
-              <Text
-                variant="caption"
-                style={[
-                  styles.toggleLabel,
-                  active ? { color: '#0F172A' } : { color: mutedTextColor },
-                ]}
-              >
-                {option.label}
-              </Text>
-            </Pressable>
-          )
-        })}
+              L
+            </Text>
+          </View>
+          <Text
+            variant="title"
+            style={[styles.headerTitle, { color: colors.grey1 }]}
+          >
+            {viewMode === 'mine' ? 'Sua Biblioteca' : 'Explorar'}
+          </Text>
+        </View>
+
+        <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => setShowSearch(!showSearch)}
+            style={styles.iconButton}
+          >
+            <Feather name="search" size={24} color={colors.grey2} />
+          </Pressable>
+          <Pressable onPress={handleOpenCreateModal} style={styles.iconButton}>
+            <Feather name="plus" size={24} color={colors.grey2} />
+          </Pressable>
+        </View>
       </View>
 
-      <View
-        style={[
-          styles.searchWrapper,
-          { backgroundColor: surfaceColor, borderColor },
-        ]}
-      >
-        <Feather name="search" size={18} color={accentColor} />
-        <TextInput
-          value={searchTerm}
-          onChangeText={setSearchTerm}
-          placeholder="Buscar playlist pelo nome"
-          placeholderTextColor={mutedTextColor}
-          style={[styles.searchInput, { color: lightTextColor }]}
-        />
+      {showSearch && (
+        <View
+          style={[styles.searchContainer, { backgroundColor: colors.grey3 }]}
+        >
+          <Feather name="search" size={18} color={colors.grey2} />
+          <TextInput
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+            placeholder="Buscar playlists"
+            placeholderTextColor={colors.grey2}
+            style={[styles.searchInput, { color: colors.grey1 }]}
+            autoFocus
+          />
+          {searchTerm.length > 0 && (
+            <Pressable onPress={() => setSearchTerm('')}>
+              <Feather name="x" size={18} color={colors.grey2} />
+            </Pressable>
+          )}
+        </View>
+      )}
+
+      <View style={styles.filterChips}>
+        <Pressable
+          onPress={() => setViewMode('mine')}
+          style={[
+            styles.chip,
+            viewMode === 'mine' && [
+              styles.chipActive,
+              { backgroundColor: colors.primary },
+            ],
+            viewMode !== 'mine' && { backgroundColor: colors.grey3 },
+          ]}
+        >
+          <Text
+            variant="caption"
+            style={[
+              styles.chipText,
+              { color: viewMode === 'mine' ? colors.black : colors.grey1 },
+            ]}
+          >
+            Minhas Playlists
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => setViewMode('explore')}
+          style={[
+            styles.chip,
+            viewMode === 'explore' && [
+              styles.chipActive,
+              { backgroundColor: colors.primary },
+            ],
+            viewMode !== 'explore' && { backgroundColor: colors.grey3 },
+          ]}
+        >
+          <Text
+            variant="caption"
+            style={[
+              styles.chipText,
+              { color: viewMode === 'explore' ? colors.black : colors.grey1 },
+            ]}
+          >
+            Explorar
+          </Text>
+        </Pressable>
       </View>
     </View>
   )
@@ -605,6 +536,153 @@ export default function PlaylistsPage() {
         onRefresh={handleRefresh}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
+
+      <Modal open={showCreateModal} onClose={handleCloseCreateModal}>
+        <View style={styles.modalContent}>
+          <Text
+            variant="title"
+            style={[styles.modalTitle, { color: colors.grey1 }]}
+          >
+            Nova Playlist
+          </Text>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.label, { color: colors.grey2 }]}>Nome *</Text>
+            <TextInput
+              value={formNome}
+              onChangeText={setFormNome}
+              placeholder="Ex: Ações de Tecnologia"
+              placeholderTextColor={colors.grey2}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: colors.grey3,
+                  color: colors.grey1,
+                  borderColor: colors.greyOutline,
+                },
+              ]}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.label, { color: colors.grey2 }]}>
+              Descrição
+            </Text>
+            <TextInput
+              value={formDescricao}
+              onChangeText={setFormDescricao}
+              placeholder="Descreva o objetivo da playlist"
+              placeholderTextColor={colors.grey2}
+              multiline
+              numberOfLines={3}
+              style={[
+                styles.input,
+                styles.textArea,
+                {
+                  backgroundColor: colors.grey3,
+                  color: colors.grey1,
+                  borderColor: colors.greyOutline,
+                },
+              ]}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={[styles.label, { color: colors.grey2 }]}>Tipo</Text>
+            <View style={styles.radioGroup}>
+              <Pressable
+                onPress={() => setFormTipo('PUBLICA')}
+                style={styles.radioOption}
+              >
+                <View
+                  style={[
+                    styles.radioCircle,
+                    { borderColor: colors.grey2 },
+                    formTipo === 'PUBLICA' && {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary,
+                    },
+                  ]}
+                >
+                  {formTipo === 'PUBLICA' && (
+                    <View
+                      style={[
+                        styles.radioInner,
+                        { backgroundColor: colors.white },
+                      ]}
+                    />
+                  )}
+                </View>
+                <Text style={{ color: colors.grey1 }}>Pública</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setFormTipo('PRIVADA')}
+                style={styles.radioOption}
+              >
+                <View
+                  style={[
+                    styles.radioCircle,
+                    { borderColor: colors.grey2 },
+                    formTipo === 'PRIVADA' && {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.primary,
+                    },
+                  ]}
+                >
+                  {formTipo === 'PRIVADA' && (
+                    <View
+                      style={[
+                        styles.radioInner,
+                        { backgroundColor: colors.white },
+                      ]}
+                    />
+                  )}
+                </View>
+                <Text style={{ color: colors.grey1 }}>Privada</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Pressable
+              onPress={() => setFormPermiteColaboracao(!formPermiteColaboracao)}
+              style={styles.checkboxOption}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  { borderColor: colors.grey2 },
+                  formPermiteColaboracao && {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary,
+                  },
+                ]}
+              >
+                {formPermiteColaboracao && (
+                  <Feather name="check" size={14} color={colors.white} />
+                )}
+              </View>
+              <Text style={{ color: colors.grey1 }}>Permite colaboração</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.modalActions}>
+            <Button
+              title="Cancelar"
+              onPress={handleCloseCreateModal}
+              // variant="outline"
+              style={styles.modalButton}
+            />
+            <Button
+              title={creating ? 'Criando...' : 'Criar Playlist'}
+              onPress={handleCreatePlaylist}
+              // disabled={creating || !formNome.trim()}
+              style={styles.modalButton}
+            />
+          </View>
+        </View>
+      </Modal>
     </Container>
   )
 }
@@ -612,170 +690,212 @@ export default function PlaylistsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    gap: 24,
-    paddingTop: 10,
   },
   header: {
-    borderRadius: 24,
-    borderWidth: 1,
-    paddingVertical: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
     paddingHorizontal: 16,
     gap: 16,
   },
-  headerTopRow: {
+  headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '700',
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
   },
-  createButton: {
+  headerActions: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  iconButton: {
     width: 40,
     height: 40,
-    borderRadius: 12,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  createButtonDisabled: {
-    opacity: 0.6,
-  },
-  toggleGroup: {
-    borderRadius: 16,
-    borderWidth: 1,
-    flexDirection: 'row',
-    padding: 4,
-    gap: 6,
-  },
-  toggleButton: {
-    flex: 1,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-  },
-  toggleLabel: {
-    fontWeight: '600',
-  },
-  searchWrapper: {
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    borderRadius: 16,
-    borderWidth: 1,
     paddingHorizontal: 16,
-    height: 52,
+    paddingVertical: 12,
+    borderRadius: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
+    padding: 0,
+  },
+  filterChips: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  chipActive: {},
+  chipText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 40,
   },
   cardWrapper: {
-    borderRadius: 24,
-    borderWidth: 1,
-    backgroundColor: 'transparent',
+    padding: 0,
+    overflow: 'hidden',
   },
-  cardContent: {
-    borderRadius: 18,
-    borderWidth: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-  },
-  cardPressable: {
+  playlistCard: {
+    flexDirection: 'row',
+    padding: 12,
     gap: 12,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 16,
+  playlistCardPressed: {
+    opacity: 0.7,
   },
-  cardTitleBlock: {
+  playlistImageContainer: {
+    justifyContent: 'center',
+  },
+  playlistImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playlistInfo: {
     flex: 1,
-    gap: 6,
+    justifyContent: 'center',
+    gap: 4,
   },
-  cardTitleRow: {
+  playlistHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
-  statusIcon: {
-    marginLeft: 4,
+  playlistName: {
+    fontSize: 15,
+    fontWeight: '600',
+    flex: 1,
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+  playlistMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
-  cardDescription: {
+  playlistMetaText: {
     fontSize: 13,
-    lineHeight: 18,
   },
-  swipeActionsWrapper: {
-    height: '100%',
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    paddingRight: 6,
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
   },
-  swipeActionSlot: {
-    width: 68,
-    height: '100%',
-    borderRadius: 22,
-    overflow: 'hidden',
-    marginLeft: 8,
-    alignSelf: 'center',
+  followButton: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
-  swipeActionSlotFirst: {
-    marginLeft: 0,
-  },
-  swipeAction: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  shareAction: {
-    backgroundColor: '#2563EB',
-  },
-  deleteAction: {
-    backgroundColor: '#DC2626',
-  },
-  swipeButton: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  swipeButtonPressed: {
-    opacity: 0.85,
-  },
-  swipeButtonDisabled: {
-    opacity: 0.5,
-  },
-  actionsRow: {
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(242, 197, 114, 0.18)',
-  },
-  actionText: {
+  followButtonText: {
+    fontSize: 12,
     fontWeight: '600',
   },
   separator: {
-    height: 12,
+    height: 4,
+  },
+  modalContent: {
+    gap: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  formGroup: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  input: {
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 24,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  checkboxOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+  },
+  modalButton: {
+    flex: 1,
   },
 })
