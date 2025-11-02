@@ -327,7 +327,7 @@ export default function PlaylistsPage() {
                   { backgroundColor: colors.primary },
                 ]}
               >
-                <Feather name="trending-up" size={32} color={colors.white} />
+                <Feather name="trending-up" size={25} color={colors.white} />
               </View>
             </View>
 
@@ -412,17 +412,9 @@ export default function PlaylistsPage() {
   )
 
   const header = (
-    <View style={[styles.header, { backgroundColor: colors.grey0 }]}>
+    <View style={[styles.header]}>
       <View style={styles.headerTop}>
         <View style={styles.headerLeft}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Text
-              variant="title"
-              style={[styles.avatarText, { color: colors.white }]}
-            >
-              L
-            </Text>
-          </View>
           <Text
             variant="title"
             style={[styles.headerTitle, { color: colors.grey1 }]}
@@ -764,6 +756,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 40,
+    gap: 8,
   },
   cardWrapper: {
     padding: 0,
@@ -771,7 +764,7 @@ const styles = StyleSheet.create({
   },
   playlistCard: {
     flexDirection: 'row',
-    padding: 12,
+    padding: 2,
     gap: 12,
   },
   playlistCardPressed: {
@@ -781,8 +774,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   playlistImage: {
-    width: 64,
-    height: 64,
+    width: 40,
+    height: 40,
     borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
