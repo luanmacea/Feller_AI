@@ -4,6 +4,7 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native'
 import { Feather } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 
+import Alert from '@/components/Alert'
 import Card from '@/components/Card'
 import Container from '@/components/Container'
 import FeatherIcon from '@/components/FeatherIcon'
@@ -24,7 +25,10 @@ export default function PlaylistDetailsPage() {
   const titleColor = colors.grey1 || (isDark ? '#f4f7ff' : '#1f2a3d')
 
   const [playlist, setPlaylist] = useState<IPlaylistDetail | null>(null)
+  const [alertMessage, setAlertMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -37,6 +41,7 @@ export default function PlaylistDetailsPage() {
       try {
         const response = await api.get<IPlaylistDetail>(`/playlists/${id}`)
         setPlaylist(response.data)
+        setIsFollowing(response.data.isFollowing || false)
       } catch (error) {
         console.error('Erro ao carregar detalhes da playlist', error)
         setPlaylist(null)
@@ -49,12 +54,45 @@ export default function PlaylistDetailsPage() {
   }, [id])
 
   const badges = useMemo(
-    () => (playlist ? buildBadges(playlist) : []),
-    [playlist],
+    () => (playlist ? buildBadges(playlist, isFollowing) : []),
+    [playlist, isFollowing],
   )
 
   const investments = playlist?.investimentos ?? []
   const containerStyle = StyleSheet.flatten([styles.container])
+
+  const handleFollowToggle = async () => {
+    if (!id || followLoading) return
+
+    setFollowLoading(true)
+
+    if (isFollowing) {
+      const response = await api.delete(`/playlists/${id}/seguir`)
+      if (response.status < 300) {
+        setIsFollowing(false)
+        setAlertMessage('Você deixou de seguir esta playlist')
+        if (playlist) {
+          setPlaylist({
+            ...playlist,
+            totalSeguidores: Math.max(0, playlist.totalSeguidores - 1),
+          })
+        }
+      }
+    } else {
+      const response = await api.post(`/playlists/${id}/seguir`)
+      if (response.status < 300) {
+        setIsFollowing(true)
+        setAlertMessage('Você está seguindo esta playlist')
+        if (playlist) {
+          setPlaylist({
+            ...playlist,
+            totalSeguidores: playlist.totalSeguidores + 1,
+          })
+        }
+      }
+    }
+    setFollowLoading(false)
+  }
 
   if (loading) {
     return <LoadingList text="Carregando playlist..." status="loading" />
@@ -65,7 +103,7 @@ export default function PlaylistDetailsPage() {
       <Container style={containerStyle}>
         <LoadingList
           status="empty"
-          text="Playlist nao encontrada ou indisponivel."
+          text="Playlist não encontrada ou indisponível."
         />
       </Container>
     )
@@ -85,24 +123,54 @@ export default function PlaylistDetailsPage() {
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
-          <Card
-            style={styles.headerCard}
-            contentStyle={StyleSheet.flatten([
-              styles.headerContent,
-              { backgroundColor: isDark ? '#121a2b' : '#ffffff' },
-            ])}
-          >
+          <View style={styles.headerCard}>
             <View style={styles.titleRow}>
-              <Text variant="title" style={{ color: titleColor }}>
-                {playlist.nome}
-              </Text>
-              <View style={styles.smallBadge}>
-                <Feather name="layers" size={14} color="#4c87ff" />
-                <Text style={styles.smallBadgeText}>
-                  {playlist.totalInvestimentos} ativos
+              <View style={styles.titleLeft}>
+                <Text variant="title" style={{ color: titleColor }}>
+                  {playlist.nome}
                 </Text>
+                <View style={styles.smallBadge}>
+                  <Feather name="layers" size={14} color="#4c87ff" />
+                  <Text style={styles.smallBadgeText}>
+                    {playlist.totalInvestimentos} ativos
+                  </Text>
+                </View>
               </View>
+
+              {!playlist.isCriador && (
+                <Pressable
+                  onPress={handleFollowToggle}
+                  disabled={followLoading}
+                  style={[
+                    styles.followButton,
+                    {
+                      backgroundColor: isFollowing
+                        ? isDark
+                          ? '#1e2a42'
+                          : '#f1f3f9'
+                        : '#4c87ff',
+                      opacity: followLoading ? 0.6 : 1,
+                    },
+                  ]}
+                >
+                  <Feather
+                    name={isFollowing ? 'check' : 'plus'}
+                    size={16}
+                    color={isFollowing ? '#4c87ff' : '#ffffff'}
+                  />
+                  <Text
+                    variant="caption"
+                    style={[
+                      styles.followButtonText,
+                      { color: isFollowing ? '#4c87ff' : '#ffffff' },
+                    ]}
+                  >
+                    {isFollowing ? 'Seguindo' : 'Seguir'}
+                  </Text>
+                </Pressable>
+              )}
             </View>
+
             <Text
               variant="body"
               style={[
@@ -110,7 +178,7 @@ export default function PlaylistDetailsPage() {
                 { color: isDark ? '#ccd6f6' : '#54617a' },
               ]}
             >
-              {playlist.descricao || 'Playlist sem descricao.'}
+              {playlist.descricao || 'Playlist sem descrição.'}
             </Text>
 
             <View style={styles.badgeRow}>
@@ -138,7 +206,9 @@ export default function PlaylistDetailsPage() {
               />
               <MetaItem
                 icon="users"
-                label={`${playlist.totalSeguidores} seguidores`}
+                label={`${playlist.totalSeguidores} ${
+                  playlist.totalSeguidores === 1 ? 'seguidor' : 'seguidores'
+                }`}
                 description="Popularidade"
                 isDarkTheme={isDark}
               />
@@ -149,7 +219,7 @@ export default function PlaylistDetailsPage() {
                 isDarkTheme={isDark}
               />
             </View>
-          </Card>
+          </View>
         }
         ListEmptyComponent={
           <Card
@@ -184,7 +254,7 @@ export default function PlaylistDetailsPage() {
                     <Text variant="subtitle">{item.nome}</Text>
                     <Text variant="caption">{item.simbolo}</Text>
                     <Text variant="caption" numberOfLines={2}>
-                      {item.descricao || 'Sem descricao disponivel.'}
+                      {item.descricao || 'Sem descrição disponível.'}
                     </Text>
                   </View>
                   <FeatherIcon icon="chevron-right" size={18} color="#888" />
@@ -227,7 +297,7 @@ export default function PlaylistDetailsPage() {
                   <View style={styles.recommendedBadge}>
                     <FeatherIcon icon="star" size={14} color="#F2C572" />
                     <Text style={styles.recommendedText}>
-                      Recomendado para voce
+                      Recomendado para você
                     </Text>
                   </View>
                 )}
@@ -236,13 +306,20 @@ export default function PlaylistDetailsPage() {
           )
         }}
       />
+
+      <Alert
+        open={!!alertMessage}
+        onClose={() => setAlertMessage(null)}
+        title="Sucesso"
+        message={alertMessage || ''}
+      />
     </Container>
   )
 }
 
 type BadgeInfo = { label: string; color: string; background: string }
 
-function buildBadges(item: IPlaylistDetail): BadgeInfo[] {
+function buildBadges(item: IPlaylistDetail, isFollowing: boolean): BadgeInfo[] {
   const badges: BadgeInfo[] = []
 
   if (item.isCriador) {
@@ -263,7 +340,7 @@ function buildBadges(item: IPlaylistDetail): BadgeInfo[] {
 
   if (item.publica) {
     badges.push({
-      label: 'Publica',
+      label: 'Pública',
       color: '#F2C572',
       background: '#F2C57222',
     })
@@ -281,7 +358,7 @@ function buildBadges(item: IPlaylistDetail): BadgeInfo[] {
     })
   }
 
-  if (item.isFollowing && !item.isCriador) {
+  if (isFollowing && !item.isCriador) {
     badges.push({
       label: 'Seguindo',
       color: '#c084fc',
@@ -353,17 +430,42 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  titleLeft: {
+    flex: 1,
+    gap: 8,
+    marginRight: 12,
+  },
+  followButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  followButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   description: {
     fontSize: 14,
     lineHeight: 20,
+    marginBottom: 12,
   },
   badgeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginBottom: 16,
   },
   badge: {
     borderRadius: 12,
@@ -485,6 +587,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    alignSelf: 'flex-start',
   },
   smallBadgeText: {
     color: '#4c87ff',

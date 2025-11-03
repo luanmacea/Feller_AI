@@ -8,6 +8,7 @@ import { z } from 'zod'
 import Button from '@/components/Button'
 import Container from '@/components/Container'
 import FeatherIcon from '@/components/FeatherIcon'
+import InvestmentCard from '@/components/InvestmentCard'
 import Modal from '@/components/Modal'
 import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
@@ -15,8 +16,6 @@ import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
 import { InvestmentItem } from '@/types/typesCerto'
-
-import InvestmentCard from './components/InvestmentCard'
 
 const InvestmentFilterSchema = z.object({
   nome: z.string().optional(),
@@ -51,6 +50,7 @@ export default function InvestmentsPage() {
       const response = await api.get<InvestmentItem[]>('/investimentos', {
         params,
       })
+      console.log('Investments fetched:', response.data[0])
       setInvestments(response.data)
     } catch (error) {
       console.error('Erro ao carregar investimentos', error)

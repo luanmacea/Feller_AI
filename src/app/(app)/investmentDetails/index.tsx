@@ -571,7 +571,6 @@ export default function InvestmentDetailsPage() {
                 Receba orientacoes personalizadas, tese de investimento e riscos
               </Text>
             </View>
-            <Feather name="message-circle" size={20} color="#f4f7ff" />
           </Card>
         </Pressable>
       </ScrollView>
