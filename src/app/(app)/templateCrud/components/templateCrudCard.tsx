@@ -7,9 +7,8 @@ import { useRouter } from 'expo-router'
 import Card from '@/components/Card'
 import FeatherIcon from '@/components/FeatherIcon'
 import Text from '@/components/Text'
+import { ITemplateCrudItem } from '@/types/types'
 import { formatDateTimeToBR } from '@/utils/formatValues'
-
-import { ITemplateCrudItem } from './type'
 
 interface TemplateCrudCardProps {
   item: ITemplateCrudItem

@@ -19,7 +19,7 @@ import Text from '@/components/Text'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import type { IRecommendedInvestment } from '@/types/typesCerto'
+import type { IRecommendedInvestment } from '@/types/types'
 
 export default function RecommendedWalletPage() {
   const router = useRouter()

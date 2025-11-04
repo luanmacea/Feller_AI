@@ -26,7 +26,7 @@ import type {
   ICommentSection,
   ISelectablePlaylist,
   InvestmentItem,
-} from '@/types/typesCerto'
+} from '@/types/types'
 
 interface TrendPoint {
   label: string

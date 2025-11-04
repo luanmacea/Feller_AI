@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router'
 import Card from '@/components/Card'
 import FeatherIcon from '@/components/FeatherIcon'
 import Text from '@/components/Text'
-import { InvestmentItem } from '@/types/typesCerto'
+import { InvestmentItem } from '@/types/types'
 
 export default function InvestmentCard({ item }: { item: InvestmentItem }) {
   const router = useRouter()

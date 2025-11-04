@@ -18,7 +18,7 @@ import { selectUser } from '@/redux/features/auth/authSelectors'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import type { InvestmentItem, IWalletSummary } from '@/types/typesCerto'
+import type { InvestmentItem, IWalletSummary } from '@/types/types'
 
 interface SparklineProps {
   data: number[]

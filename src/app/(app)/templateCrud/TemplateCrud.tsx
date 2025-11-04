@@ -5,10 +5,10 @@ import type { ListRenderItem } from 'react-native'
 import Container from '@/components/Container'
 import LoadingList from '@/components/LoadingList'
 import Text from '@/components/Text'
+import { getTemplateCrud } from '@/services/requests/templateCrud'
+import { ITemplateCrudItem } from '@/types/types'
 
-import { getTemplateCrud } from './components/requests'
 import TemplateCrudCard from './components/templateCrudCard'
-import { ITemplateCrudItem } from './components/type'
 
 export default function TemplateCrud() {
   const [templateCrudList, setTemplateCrudList] = useState<ITemplateCrudItem[]>(

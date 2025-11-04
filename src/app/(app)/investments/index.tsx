@@ -15,7 +15,7 @@ import { TextInput } from '@/components/TextInput'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import { InvestmentItem } from '@/types/typesCerto'
+import { InvestmentItem } from '@/types/types'
 
 const InvestmentFilterSchema = z.object({
   nome: z.string().optional(),
@@ -50,7 +50,6 @@ export default function InvestmentsPage() {
       const response = await api.get<InvestmentItem[]>('/investimentos', {
         params,
       })
-      console.log('Investments fetched:', response.data[0])
       setInvestments(response.data)
     } catch (error) {
       console.error('Erro ao carregar investimentos', error)

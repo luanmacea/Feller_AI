@@ -11,7 +11,7 @@ import Text from '@/components/Text'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import type { IWalletSummary } from '@/types/typesCerto'
+import type { IWalletSummary } from '@/types/types'
 
 interface TrendPoint {
   label: string

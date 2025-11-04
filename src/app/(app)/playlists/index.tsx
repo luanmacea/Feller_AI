@@ -21,7 +21,7 @@ import Text from '@/components/Text'
 import { selectThemeState } from '@/redux/features/theme/themeSelectors'
 import { useAppSelector } from '@/redux/hook'
 import api from '@/services/api'
-import type { IPlaylistItem } from '@/types/typesCerto'
+import type { IPlaylistItem } from '@/types/types'
 
 type ViewMode = 'mine' | 'explore'
 
