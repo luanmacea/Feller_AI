@@ -11,6 +11,7 @@ import {
 import { Feather } from '@expo/vector-icons'
 import { useRouter } from 'expo-router'
 
+import Button from '@/components/Button'
 import Card from '@/components/Card'
 import Container from '@/components/Container'
 import Text from '@/components/Text'
@@ -316,6 +317,22 @@ export default function HomePage() {
               </Card>
             )}
           </View>
+
+          <View style={styles.portfolioCTA}>
+            <Text
+              style={[
+                styles.portfolioCTAText,
+                { color: colors.grey2 || '#5c6f90' },
+              ]}
+            >
+              Deseja recomendacoes de investimento? Clique aqui para ir na tela
+              montar sua carteira.
+            </Text>
+            <Button
+              title="Montar minha carteira"
+              onPress={() => router.push('/(app)/recommended-wallet')}
+            />
+          </View>
         </Card>
 
         <View style={styles.sectionHeader}>
@@ -458,6 +475,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
     flexWrap: 'wrap',
+  },
+  portfolioCTA: {
+    gap: 12,
+  },
+  portfolioCTAText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  portfolioCTAButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+  },
+  portfolioCTAButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   highlightCard: {
     minWidth: '45%',
