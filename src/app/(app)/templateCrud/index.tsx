@@ -1,1 +1,1 @@
-export { default as TemplateCrud } from './TemplateCrud'
+export { default } from './TemplateCrud'

@@ -7,48 +7,29 @@ interface ICreateTemplateCrud {
 }
 
 export async function getTemplateCrud() {
-  try {
-    const response = await api.get('/templateCrud')
-    return response
-  } catch (error: any) {
-    return error.response
-  }
+  const response = await api.get('/templateCrud')
+  return response
 }
 
 export async function getTemplateCrudItem(id: number) {
-  try {
-    const response = await api.get(`/templateCrud/${id}`)
-    return response
-  } catch (error: any) {
-    return error.response
-  }
+  const response = await api.get(`/templateCrud/${id}`)
+  return response
 }
 
 export async function postTemplateCrud(data: ICreateTemplateCrud) {
-  try {
-    const response = await api.post('/templateCrud', {
-      ...data,
-    })
-    return response
-  } catch (error: any) {
-    return error.response
-  }
+  const response = await api.post('/templateCrud', {
+    ...data,
+  })
+  return response
 }
 export async function putTemplateCrud(data: ICreateTemplateCrud) {
-  try {
-    const response = await api.put('/templateCrud', {
-      ...data,
-    })
-    return response
-  } catch (error: any) {
-    return error.response
-  }
+  const response = await api.put('/templateCrud', {
+    ...data,
+  })
+  return response
 }
+
 export async function deleteTemplateCrud(id: string) {
-  try {
-    const response = await api.delete(`/templateCrud/${id}`)
-    return response
-  } catch (error: any) {
-    return error.response
-  }
+  const response = await api.delete(`/templateCrud/${id}`)
+  return response
 }

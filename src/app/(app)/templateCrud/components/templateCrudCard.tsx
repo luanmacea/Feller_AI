@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
 
@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router'
 import Card from '@/components/Card'
 import FeatherIcon from '@/components/FeatherIcon'
 import Text from '@/components/Text'
+import { formatDateTimeToBR } from '@/utils/formatValues'
 
 import { ITemplateCrudItem } from './type'
 
@@ -22,30 +23,6 @@ export default function TemplateCrudCard({
   rightAccessory,
 }: TemplateCrudCardProps) {
   const router = useRouter()
-
-  const formattedDate = useMemo(() => {
-    const candidate =
-      item.updatedAt ?? item.createdAt ?? item.date ?? item.data ?? null
-
-    if (!candidate) {
-      return 'Data indisponivel'
-    }
-
-    const normalizedDate =
-      typeof candidate === 'number'
-        ? new Date(candidate)
-        : typeof candidate === 'string'
-          ? new Date(candidate)
-          : candidate instanceof Date
-            ? candidate
-            : null
-
-    if (normalizedDate && !Number.isNaN(normalizedDate.getTime())) {
-      return normalizedDate.toLocaleDateString('pt-BR')
-    }
-
-    return String(candidate)
-  }, [item])
 
   const handlePress = useCallback(() => {
     if (onPress) {
@@ -75,7 +52,7 @@ export default function TemplateCrudCard({
             {item.descricao || 'Adicione uma descricao para este item.'}
           </Text>
           <Text variant="caption" style={styles.dateLabel}>
-            Atualizado em {formattedDate}
+            Atualizado em {formatDateTimeToBR(item.updatedAt || '')}
           </Text>
         </View>
         <View style={styles.accessory}>
