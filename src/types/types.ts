@@ -136,14 +136,83 @@ export interface IPlaylistDetail extends IPlaylistItem {
 }
 
 export interface IRecommendedInvestment {
-  id: number
-  usuarioId: number
-  investimentoId: number
-  investimentoNome: string
-  investimentoSimbolo: string
-  categoria: string
-  risco: string
-  dataRecomendacao: string
+  carteira: {
+    renda_fixa: {
+      porcentagem: number
+      investimentos: {
+        id: number
+        nome: string
+        simbolo: string
+        categoria: string
+        risco: string
+        precoAtual: number
+        precoBase: number
+        variacaoPercentual: number
+        dividendYield: number
+        descricao: string
+      }[]
+    }
+    tesouro_direto: {
+      porcentagem: number
+      investimentos: {
+        id: number
+        nome: string
+        simbolo: string
+        categoria: string
+        risco: string
+        precoAtual: number
+        precoBase: number
+        variacaoPercentual: number
+        dividendYield: number
+        descricao: string
+      }[]
+    }
+    fundos_imobiliarios: {
+      porcentagem: number
+      investimentos: {
+        id: number
+        nome: string
+        simbolo: string
+        categoria: string
+        risco: string
+        precoAtual: number
+        precoBase: number
+        variacaoPercentual: number
+        dividendYield: number
+        descricao: string
+      }[]
+    }
+    acoes: {
+      porcentagem: number
+      investimentos: {
+        id: number
+        nome: string
+        simbolo: string
+        categoria: string
+        risco: string
+        precoAtual: number
+        precoBase: number
+        variacaoPercentual: number
+        dividendYield: number
+        descricao: string
+      }[]
+    }
+    criptomoedas: {
+      porcentagem: number
+      investimentos: {
+        id: number
+        nome: string
+        simbolo: string
+        categoria: string
+        risco: string
+        precoAtual: number
+        precoBase: number
+        variacaoPercentual: number
+        dividendYield: number
+        descricao: string
+      }[]
+    }
+  }
 }
 
 export interface ISelectablePlaylist {

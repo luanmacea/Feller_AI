@@ -4,6 +4,7 @@ import {
   ViewStyle,
   TouchableOpacity,
   ActivityIndicator,
+  View,
 } from 'react-native'
 
 import { LinearGradient } from 'expo-linear-gradient'
@@ -16,6 +17,8 @@ interface ButtonProps {
   onPress: () => void
   style?: ViewStyle
   loading?: boolean
+  disabled?: boolean
+  variant?: 'filled' | 'outlined'
 }
 
 export default function Button({
@@ -23,15 +26,19 @@ export default function Button({
   onPress,
   style,
   loading = false,
+  disabled = false,
+  variant = 'filled',
 }: ButtonProps) {
   const theme = useAppSelector(selectThemeState)
+  const isDisabled = disabled || loading
 
   const styles = StyleSheet.create({
     buttonContainer: {
       borderRadius: 8,
       overflow: 'hidden',
+      opacity: isDisabled ? 0.6 : 1,
     },
-    gradient: {
+    base: {
       paddingVertical: 10,
       paddingHorizontal: 20,
       borderRadius: 8,
@@ -39,36 +46,59 @@ export default function Button({
       justifyContent: 'center',
       flexDirection: 'row',
       gap: 8,
+      minWidth: 120,
     },
     text: {
-      color: theme.colors?.grey0,
       fontSize: 16,
       fontWeight: 'bold',
+      color:
+        variant === 'filled'
+          ? theme.colors?.grey0
+          : (theme.colors?.primary ?? '#F7CA02'),
+    },
+    outlined: {
+      borderWidth: 1.5,
+      borderColor: theme.colors?.primary ?? '#F7CA02',
+      backgroundColor: 'transparent',
     },
   })
+
+  const renderContent = () => {
+    if (loading)
+      return (
+        <ActivityIndicator
+          color={
+            variant === 'filled'
+              ? theme.colors?.grey0
+              : (theme.colors?.primary ?? '#F7CA02')
+          }
+        />
+      )
+    return <Text style={styles.text}>{title}</Text>
+  }
 
   return (
     <TouchableOpacity
       style={[styles.buttonContainer, style]}
-      onPress={!loading ? onPress : undefined}
+      onPress={!isDisabled ? onPress : undefined}
       activeOpacity={0.8}
-      disabled={loading}
+      disabled={isDisabled}
     >
-      <LinearGradient
-        colors={[
-          theme.colors?.primary ?? '#F7CA02',
-          theme.colors?.black ?? '#000000',
-        ]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1.4, y: 1 }}
-        style={styles.gradient}
-      >
-        {loading ? (
-          <ActivityIndicator color={theme.colors?.grey0} />
-        ) : (
-          <Text style={styles.text}>{title}</Text>
-        )}
-      </LinearGradient>
+      {variant === 'filled' ? (
+        <LinearGradient
+          colors={[
+            theme.colors?.primary ?? '#F7CA02',
+            theme.colors?.black ?? '#000000',
+          ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1.6, y: 1 }}
+          style={styles.base}
+        >
+          {renderContent()}
+        </LinearGradient>
+      ) : (
+        <View style={[styles.base, styles.outlined]}>{renderContent()}</View>
+      )}
     </TouchableOpacity>
   )
 }
