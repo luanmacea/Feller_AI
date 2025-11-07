@@ -27,6 +27,17 @@ import { IRecommendedInvestment } from '@/types/types'
 type TipoRetorno = 'curto' | 'medio' | 'longo' | undefined
 type TipoCarteira = 'Tipo1' | 'Tipo2' | 'Tipo3' | undefined
 
+type Carteira = IRecommendedInvestment['carteira']
+type CarteiraKey = keyof Carteira
+
+const CATEGORIES_ORDER: CarteiraKey[] = [
+  'renda_fixa',
+  'tesouro_direto',
+  'fundo_imobiliario',
+  'renda_variavel',
+  'cripto',
+]
+
 export default function RecommendedWalletPage() {
   const router = useRouter()
   const theme = useAppSelector(selectThemeState)
@@ -45,11 +56,105 @@ export default function RecommendedWalletPage() {
     'success',
   )
 
+  const [updateWallet, setUpdateWallet] = useState(true)
+
   // Estados do modal
   const [modalVisible, setModalVisible] = useState(false)
   const [capital, setCapital] = useState('10000')
   const [retorno, setRetorno] = useState<TipoRetorno>(undefined)
   const [tipoCarteira, setTipoCarteira] = useState<TipoCarteira>(undefined)
+
+  function normalizeCarteiraPercentuais(carteira: Carteira): Carteira {
+    const entries = CATEGORIES_ORDER.filter((k) => carteira[k]).map(
+      (k) => [k, carteira[k]] as const,
+    )
+
+    const nullKeys: CarteiraKey[] = []
+    let sumFilled = 0
+
+    for (const [key, obj] of entries) {
+      const p = obj.porcentagem
+      if (p === null || p === undefined) nullKeys.push(key)
+      else sumFilled += p
+    }
+
+    let missing = 100 - sumFilled
+    if (missing < 0) missing = 0
+
+    const newCarteira: Carteira = { ...carteira }
+
+    // Caso normal: há algo a distribuir entre nulos
+    if (missing > 0 && nullKeys.length > 0) {
+      const perNull = missing / nullKeys.length
+      for (const key of nullKeys) {
+        newCarteira[key] = {
+          ...newCarteira[key],
+          porcentagem: Number(perNull.toFixed(2)),
+        }
+      }
+    }
+
+    // Regra do roubo: faltava 0 e existe(m) nulo(s) -> rouba 10pp do maior
+    if (missing === 0 && nullKeys.length > 0) {
+      // acha maior entre os preenchidos
+      let maxKey: CarteiraKey | null = null
+      let maxVal = -Infinity
+
+      for (const [key, obj] of entries) {
+        const p = obj.porcentagem
+        if (p !== null && p !== undefined && p > maxVal) {
+          maxVal = p
+          maxKey = key
+        }
+      }
+
+      if (maxKey) {
+        const totalSteal = Math.min(10, newCarteira[maxKey].porcentagem ?? 0) // evita negativo
+        const perNull = totalSteal / nullKeys.length
+
+        // subtrai do maior
+        newCarteira[maxKey] = {
+          ...newCarteira[maxKey],
+          porcentagem: Number(
+            ((newCarteira[maxKey].porcentagem ?? 0) - totalSteal).toFixed(2),
+          ),
+        }
+
+        // reparte entre nulos
+        for (const key of nullKeys) {
+          const curr = newCarteira[key].porcentagem ?? 0
+          newCarteira[key] = {
+            ...newCarteira[key],
+            porcentagem: Number((curr + perNull).toFixed(2)),
+          }
+        }
+      }
+    }
+
+    // Ajuste fino de arredondamento para garantir soma == 100
+    const newSum = CATEGORIES_ORDER.reduce(
+      (acc, k) => acc + (newCarteira[k]?.porcentagem ?? 0),
+      0,
+    )
+    const diff = Number((100 - newSum).toFixed(2))
+    if (Math.abs(diff) >= 0.01) {
+      // aplica o ajuste na última chave não-nula (ou no último nulo se houver)
+      const candidates = [...CATEGORIES_ORDER].filter((k) => newCarteira[k])
+      const targetKey =
+        nullKeys.length > 0
+          ? nullKeys[nullKeys.length - 1]
+          : candidates[candidates.length - 1]
+
+      newCarteira[targetKey] = {
+        ...newCarteira[targetKey],
+        porcentagem: Number(
+          ((newCarteira[targetKey].porcentagem ?? 0) + diff).toFixed(2),
+        ),
+      }
+    }
+
+    return newCarteira
+  }
 
   const fetchRecommendations = useCallback(async () => {
     if (!refreshing) setLoading(true)
@@ -57,20 +162,28 @@ export default function RecommendedWalletPage() {
       const { data } = await api.get<IRecommendedInvestment>(
         '/investimentos/recomendados/enriquecidos',
       )
-      console.log('Dados da carteira recomendada:', data)
-      setCarteiraData(data)
+      console.log(
+        'Dados da carteira recomendada:',
+        JSON.stringify(data, null, 2),
+      )
+
+      const carteiraNormalizada = normalizeCarteiraPercentuais(data.carteira)
+
+      setCarteiraData({ ...data, carteira: carteiraNormalizada })
     } catch (error) {
       console.error('Erro ao buscar carteira recomendada', error)
       setCarteiraData(null)
     } finally {
       setLoading(false)
       setRefreshing(false)
+      setUpdateWallet(false)
     }
   }, [refreshing])
 
   useEffect(() => {
+    if (!updateWallet) return
     fetchRecommendations()
-  }, [fetchRecommendations])
+  }, [fetchRecommendations, updateWallet])
 
   const handleRefresh = () => {
     setRefreshing(true)
@@ -105,43 +218,37 @@ export default function RecommendedWalletPage() {
     setMounting(true)
     setModalVisible(false)
 
-    try {
-      const payload: any = {
-        capital: capitalNumerico,
-      }
+    // try {
+    const payload: any = {
+      capital: capitalNumerico,
+    }
 
-      if (retorno) payload.retorno = retorno
-      if (tipoCarteira) payload.tipo = tipoCarteira
+    if (retorno) payload.retorno = retorno
+    if (tipoCarteira) payload.tipo = tipoCarteira
 
-      console.log('Payload para montar carteira:', payload)
-      const response = await api.post(
-        '/feller/montar-carteira-recomendada',
-        payload,
-      )
+    console.log('Payload para montar carteira:', payload)
+    const response = await api.post(
+      '/feller/montar-carteira-recomendada',
+      payload,
+    )
 
-      console.log('Carteira recomendada montada:', response.data)
-
-      setCarteiraData(response.data)
+    if (response.status < 300) {
       setAlertTitle('Sucesso')
       setAlertMessage('Carteira montada com sucesso!')
       setAlertType('success')
       setAlertVisible(true)
-
-      // Reset form
+      console.log(
+        'Dados da carteira recomendada:',
+        JSON.stringify(response.data, null, 2),
+      )
+      setUpdateWallet(true)
       setCapital('10000')
       setRetorno(undefined)
       setTipoCarteira(undefined)
-    } catch (error) {
-      console.error('Erro ao montar carteira recomendada', error)
-      setAlertTitle('Erro')
-      setAlertMessage(
-        'Não foi possível montar a carteira recomendada no momento.',
-      )
-      setAlertType('error')
-      setAlertVisible(true)
-    } finally {
-      setMounting(false)
     }
+
+    setMounting(false)
+    // }
   }
 
   // Preparar dados da carteira para renderização
@@ -155,13 +262,13 @@ export default function RecommendedWalletPage() {
         icon: 'shield',
         color: '#3b82f6',
       },
-      fundos_imobiliarios: {
+      fundo_imobiliario: {
         nome: 'Fundos Imobiliários',
         icon: 'home',
         color: '#8b5cf6',
       },
-      acoes: { nome: 'Ações', icon: 'activity', color: '#f59e0b' },
-      criptomoedas: { nome: 'Criptomoedas', icon: 'zap', color: '#ef4444' },
+      renda_variavel: { nome: 'Ações', icon: 'activity', color: '#f59e0b' },
+      cripto: { nome: 'Criptomoedas', icon: 'zap', color: '#ef4444' },
     }
 
     return Object.entries(carteiraData.carteira)
@@ -593,10 +700,10 @@ export default function RecommendedWalletPage() {
                     }}
                   >
                     {tipo === 'Tipo1'
-                      ? 'Conservadora'
+                      ? 'Básica'
                       : tipo === 'Tipo2'
-                        ? 'Moderada'
-                        : 'Arrojada'}
+                        ? 'Intermediária'
+                        : 'Avançada'}
                   </Text>
                   <Text
                     variant="caption"

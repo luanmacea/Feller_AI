@@ -167,7 +167,7 @@ export interface IRecommendedInvestment {
         descricao: string
       }[]
     }
-    fundos_imobiliarios: {
+    fundo_imobiliario: {
       porcentagem: number
       investimentos: {
         id: number
@@ -182,7 +182,7 @@ export interface IRecommendedInvestment {
         descricao: string
       }[]
     }
-    acoes: {
+    renda_variavel: {
       porcentagem: number
       investimentos: {
         id: number
@@ -197,7 +197,7 @@ export interface IRecommendedInvestment {
         descricao: string
       }[]
     }
-    criptomoedas: {
+    cripto: {
       porcentagem: number
       investimentos: {
         id: number

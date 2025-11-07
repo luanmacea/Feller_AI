@@ -196,7 +196,7 @@ export default function HomePage() {
               {displayName}
             </Text>
           </View>
-          <Pressable onPress={() => router.push('/(app)/profile')}>
+          {/* <Pressable onPress={() => router.push('/(app)/profile')}>
             <Card
               variant="flat"
               style={styles.avatarCard}
@@ -211,7 +211,7 @@ export default function HomePage() {
                 color={colors.primary || '#C99A2E'}
               />
             </Card>
-          </Pressable>
+          </Pressable> */}
         </View>
 
         <Card contentStyle={styles.portfolioCard}>
