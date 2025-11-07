@@ -43,7 +43,7 @@ export default function PlaylistsPage() {
     {},
   )
   const [creating, setCreating] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
+  // const [showSearch, setShowSearch] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   // Form state
@@ -60,11 +60,7 @@ export default function PlaylistsPage() {
   }, [searchTerm])
 
   const loadPlaylists = useCallback(
-    async (
-      mode: ViewMode,
-      term: string,
-      options?: { showLoader?: boolean },
-    ) => {
+    async (options?: { showLoader?: boolean }) => {
       const shouldShowLoader = options?.showLoader ?? true
       const currentRequest = ++requestIdRef.current
 
@@ -73,14 +69,15 @@ export default function PlaylistsPage() {
       }
 
       try {
-        const params: Record<string, string> = {
-          tipo: mode === 'mine' ? 'minhas' : 'publicas',
-        }
-        if (term) {
-          params.nome = term
-        }
-
-        const response = await api.get<IPlaylistItem[]>('/playlists')
+        const response = await api.get<IPlaylistItem[]>(
+          '/playlists',
+          //    {
+          //   params: {
+          //     filtro: viewMode === 'mine' ? 'MINHAS' : 'PUBLICAS',
+          //   },
+          // }
+        )
+        console.log('response', response.data)
 
         if (requestIdRef.current === currentRequest) {
           setPlaylists(response.data ?? [])
@@ -103,7 +100,7 @@ export default function PlaylistsPage() {
   )
 
   useEffect(() => {
-    loadPlaylists(viewMode, debouncedSearch)
+    loadPlaylists()
   }, [viewMode, debouncedSearch, loadPlaylists])
 
   const handleOpenPlaylist = useCallback(
@@ -255,7 +252,7 @@ export default function PlaylistsPage() {
       setSearchTerm(nextSearch)
       setDebouncedSearch(nextSearch)
 
-      await loadPlaylists(targetMode, nextSearch)
+      await loadPlaylists()
     } catch (error) {
       console.error('Erro ao criar playlist', error)
       Alert.alert('Erro', 'Não foi possível criar a playlist. Tente novamente.')
@@ -275,7 +272,7 @@ export default function PlaylistsPage() {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true)
     try {
-      await loadPlaylists(viewMode, debouncedSearch, { showLoader: false })
+      await loadPlaylists({ showLoader: false })
     } finally {
       setRefreshing(false)
     }
@@ -299,22 +296,6 @@ export default function PlaylistsPage() {
         <Card style={styles.cardWrapper}>
           <Pressable
             onPress={() => handleOpenPlaylist(item.id)}
-            onLongPress={() => {
-              if (isOwner) {
-                Alert.alert('Ações', `O que deseja fazer com "${item.nome}"?`, [
-                  { text: 'Cancelar', style: 'cancel' },
-                  {
-                    text: 'Compartilhar',
-                    onPress: () => handleShare(item),
-                  },
-                  {
-                    text: 'Excluir',
-                    style: 'destructive',
-                    onPress: () => handleDelete(item),
-                  },
-                ])
-              }
-            }}
             style={({ pressed }) => [
               styles.playlistCard,
               pressed && styles.playlistCardPressed,
@@ -340,10 +321,10 @@ export default function PlaylistsPage() {
                 >
                   {item.nome}
                 </Text>
-                {item.privada && (
+                {item.privada && isOwner && (
                   <Feather name="lock" size={14} color={colors.grey2} />
                 )}
-                {item.compartilhada && !item.privada && (
+                {isOwner && (
                   <Feather name="users" size={14} color={colors.grey2} />
                 )}
               </View>
@@ -424,19 +405,19 @@ export default function PlaylistsPage() {
         </View>
 
         <View style={styles.headerActions}>
-          <Pressable
+          {/* <Pressable
             onPress={() => setShowSearch(!showSearch)}
             style={styles.iconButton}
           >
             <Feather name="search" size={24} color={colors.grey2} />
-          </Pressable>
+          </Pressable> */}
           <Pressable onPress={handleOpenCreateModal} style={styles.iconButton}>
             <Feather name="plus" size={24} color={colors.grey2} />
           </Pressable>
         </View>
       </View>
 
-      {showSearch && (
+      {/* {showSearch && (
         <View
           style={[styles.searchContainer, { backgroundColor: colors.grey3 }]}
         >
@@ -455,7 +436,7 @@ export default function PlaylistsPage() {
             </Pressable>
           )}
         </View>
-      )}
+      )} */}
 
       <View style={styles.filterChips}>
         <Pressable

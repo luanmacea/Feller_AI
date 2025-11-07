@@ -130,7 +130,7 @@ const createStyles = (theme: any) =>
       elevation: 5,
     },
     confirmButton: {
-      backgroundColor: theme.colors?.secondary,
+      backgroundColor: theme.colors?.primary,
       shadowColor: '#000',
       shadowOffset: {
         width: 0,

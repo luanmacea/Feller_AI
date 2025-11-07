@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 
 import Alert from '@/components/Alert'
 import Card from '@/components/Card'
+import Confirmation from '@/components/Confirmation'
 import Container from '@/components/Container'
 import FeatherIcon from '@/components/FeatherIcon'
 import LoadingList from '@/components/LoadingList'
@@ -24,6 +25,7 @@ export default function PlaylistDetailsPage() {
   const isDark = theme.mode === 'dark'
   const titleColor = colors.grey1 || (isDark ? '#f4f7ff' : '#1f2a3d')
 
+  const [showConfirmation, setShowConfirmation] = useState(false)
   const [playlist, setPlaylist] = useState<IPlaylistDetail | null>(null)
   const [alertMessage, setAlertMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -116,6 +118,13 @@ export default function PlaylistDetailsPage() {
     })
   }
 
+  const handleDelete = async () => {
+    const response = await api.delete(`/playlists/${id}`)
+    if (response.status < 300) {
+      router.back()
+    }
+  }
+
   return (
     <Container style={containerStyle}>
       <FlatList
@@ -167,6 +176,15 @@ export default function PlaylistDetailsPage() {
                   >
                     {isFollowing ? 'Seguindo' : 'Seguir'}
                   </Text>
+                </Pressable>
+              )}
+              {playlist.isCriador && (
+                <Pressable onPress={() => setShowConfirmation(true)}>
+                  <FeatherIcon
+                    icon={'trash'}
+                    size={20}
+                    color={isFollowing ? '#4c87ff' : '#ffffff'}
+                  />
                 </Pressable>
               )}
             </View>
@@ -305,6 +323,14 @@ export default function PlaylistDetailsPage() {
             </Pressable>
           )
         }}
+      />
+
+      <Confirmation
+        open={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={handleDelete}
+        title="Excluir playlist"
+        message="Tem certeza que deseja excluir esta playlist?"
       />
 
       <Alert
