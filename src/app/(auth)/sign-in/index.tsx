@@ -1,14 +1,12 @@
 import { FormProvider, SubmitHandler, useForm } from 'react-hook-form'
-import { View, StyleSheet, TouchableOpacity } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'expo-router'
 import { z } from 'zod'
 
 import Button from '@/components/Button'
 import Container from '@/components/Container'
 import Logo from '@/components/Logo'
-import Text from '@/components/Text'
 import { TextInput } from '@/components/TextInput'
 import { selectAuthState } from '@/redux/features/auth/authSelectors'
 import { signIn } from '@/redux/features/auth/authThunk'
@@ -24,7 +22,6 @@ type SignInInput = z.infer<typeof SignInSchema>
 
 export default function SignInPage() {
   const auth = useAppSelector(selectAuthState)
-  const router = useRouter()
   const dispatch = useAppDispatch()
 
   const methods = useForm<SignInInput>({
@@ -43,7 +40,7 @@ export default function SignInPage() {
           <Logo style={{ width: '100%', height: '50%' }} resizeMode="contain" />
         </View>
 
-        <View>
+        <View style={{ marginBottom: 16 }}>
           <TextInput
             name="cpf"
             label="Digite seu CPF"
@@ -58,12 +55,12 @@ export default function SignInPage() {
           />
         </View>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.forgotButton}
           onPress={() => router.push('reset-password')}
         >
           <Text style={styles.forgotText}>Esqueceu sua senha?</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <Button
           title="Login"
@@ -71,12 +68,12 @@ export default function SignInPage() {
           onPress={methods.handleSubmit(onSubmit)}
         />
 
-        <View style={styles.footer}>
+        {/* <View style={styles.footer}>
           <Text style={styles.footerText}>Acessando pela primeira vez? </Text>
           <TouchableOpacity onPress={() => router.push('sign-up')}>
             <Text style={styles.footerLink}>Primeiro acesso</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </FormProvider>
     </Container>
   )
