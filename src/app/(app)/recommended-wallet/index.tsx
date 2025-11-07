@@ -162,10 +162,6 @@ export default function RecommendedWalletPage() {
       const { data } = await api.get<IRecommendedInvestment>(
         '/investimentos/recomendados/enriquecidos',
       )
-      console.log(
-        'Dados da carteira recomendada:',
-        JSON.stringify(data, null, 2),
-      )
 
       const carteiraNormalizada = normalizeCarteiraPercentuais(data.carteira)
 
@@ -237,10 +233,6 @@ export default function RecommendedWalletPage() {
       setAlertMessage('Carteira montada com sucesso!')
       setAlertType('success')
       setAlertVisible(true)
-      console.log(
-        'Dados da carteira recomendada:',
-        JSON.stringify(response.data, null, 2),
-      )
       setUpdateWallet(true)
       setCapital('10000')
       setRetorno(undefined)
