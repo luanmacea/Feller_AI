@@ -261,7 +261,7 @@ export default function HomePage() {
           <Text style={[styles.portfolioValue]}>
             {walletLoading ? '...' : formattedBalance}
           </Text>
-          <Text>Evolucao acumulada nos ultimos 12 meses</Text>
+          <Text>Evolução acumulada nos ultimos 12 meses</Text>
 
           <View style={styles.portfolioHighlights}>
             {walletLoading ? (
@@ -325,7 +325,7 @@ export default function HomePage() {
                 { color: colors.grey2 || '#5c6f90' },
               ]}
             >
-              Deseja recomendacoes de investimento? Clique aqui para ir na tela
+              Deseja recomendações de investimento? Clique aqui para ir na tela
               montar sua carteira.
             </Text>
             <Button
@@ -336,10 +336,10 @@ export default function HomePage() {
         </Card>
 
         <View style={styles.sectionHeader}>
-          <Text variant="title">Top acoes do dia</Text>
-          <Text>Monitoramos os destaques para voce decidir com confianca</Text>
+          <Text variant="title">Top ações do dia</Text>
+          <Text>Monitoramos os destaques para você decidir com confiança</Text>
           <Text variant="caption">
-            (clique na acao desejada para mais detalhes)
+            (clique na ação desejada para mais detalhes)
           </Text>
         </View>
         <ScrollView

@@ -35,7 +35,7 @@ const PROFILE_TIMELINE: TimelineEntry[] = [
   {
     year: '2024',
     profile: 'Moderado',
-    description: 'Carteira balanceada entre renda fixa, acoes e multimercado.',
+    description: 'Carteira balanceada entre renda fixa, ações e multimercado.',
   },
 ]
 

@@ -10,11 +10,11 @@ interface SignInPayload {
 }
 
 interface SignUpPayload {
-  nomeUsuario: string
-  email: string
-  cpf: string
-  password: string
-  dtNascimento: string
+  nomeUsuario?: string
+  email?: string
+  cpf?: string
+  password?: string
+  dtNascimento?: string
   tipo?: string
 }
 

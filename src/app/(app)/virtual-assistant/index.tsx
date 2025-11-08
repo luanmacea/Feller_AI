@@ -179,7 +179,7 @@ export default function RecommendationsPage() {
   //   return (
   //     <Container style={{ justifyContent: 'center', alignItems: 'center' }}>
   //       <Card>
-  //         <Text variant="title">Recomendacoes</Text>
+  //         <Text variant="title">Recomendações</Text>
   //         <Text style={{ textAlign: 'center', lineHeight: 20 }}>
   //           Em breve voce vera aqui sugestoes personalizadas do assistente para
   //           ajustar sua carteira com base no seu perfil de risco e objetivos.

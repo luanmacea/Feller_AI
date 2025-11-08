@@ -86,7 +86,7 @@ export default function SignUpPage() {
           <Text variant="title" style={{ marginBottom: 8 }}>
             Crie sua conta
           </Text>
-          <Text variant="subtitle">Digite suas informacoes</Text>
+          <Text variant="subtitle">Digite suas informações</Text>
         </View>
 
         <View style={styles.form}>

@@ -15,7 +15,7 @@ Funcionalidades:
 - Autenticacao com cadastro, login, logout e persistencia de usuario
 - Recuperacao de senha com verificacao de CPF e alerta global reutilizavel
 - Suporte a tema claro/escuro com alternancia direta no menu do app
-- Dashboard home com resumo da carteira, destaques diarios e acesso rapido a recomendacoes
+- Dashboard home com resumo da carteira, destaques diarios e acesso rapido a recomendações
 - Tela de carteira com graficos interativos, filtros de periodo e simulador de cenarios
 - Perfil do usuario com avatar remoto e dados pessoais centralizados
 - Tratamento centralizado de erros de API exibidos em modal de alerta

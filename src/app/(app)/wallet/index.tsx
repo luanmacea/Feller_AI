@@ -104,7 +104,7 @@ export default function WalletPage() {
               value={formatCurrency(summary.totalDividendosCarteira)}
             />
             <MetricBlock
-              label="Posicoes"
+              label="Posições"
               value={summary?.quantidadePosicoes?.toString()}
             />
           </View>
@@ -138,7 +138,7 @@ export default function WalletPage() {
             { backgroundColor: isDark ? '#121a2b' : '#ffffff' },
           ])}
         >
-          <Text variant="title">Distribuicao por categoria</Text>
+          <Text variant="title">Distribuição por categoria</Text>
           <View style={styles.distributionList}>
             {distribution.map((item) => (
               <View key={item.label} style={styles.distributionRow}>
@@ -181,7 +181,7 @@ export default function WalletPage() {
         </Card>
 
         <Card contentStyle={styles.positionsCard} style={{ marginTop: 16 }}>
-          <Text variant="title">Minhas posicoes</Text>
+          <Text variant="title">Minhas posições</Text>
           {positions.length === 0 ? (
             <Text style={{ marginTop: 12 }}>Nenhuma posicao encontrada.</Text>
           ) : (

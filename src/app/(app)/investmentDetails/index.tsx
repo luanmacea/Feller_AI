@@ -331,7 +331,7 @@ export default function InvestmentDetailsPage() {
               color={colors.grey2 || '#f4f7ff'}
             />
             <MetricBlock
-              label="Variacao"
+              label="Variação"
               value={`${isPositive ? '+' : ''}${investment.variacaoPercentual.toFixed(2)}%`}
               color={highlightColor}
               icon={isPositive ? 'trending-up' : 'trending-down'}
@@ -362,7 +362,7 @@ export default function InvestmentDetailsPage() {
           <Text
             style={[styles.sectionTitle, { color: colors.grey1 || '#1f2a3d' }]}
           >
-            Variacao recente
+            Variação recente
           </Text>
           <TrendSparkline data={trendData} color={highlightColor} />
           <View style={styles.trendLabels}>
@@ -390,7 +390,7 @@ export default function InvestmentDetailsPage() {
         >
           <InfoRow label="Liquidez" value={investment.liquidez} />
           <InfoRow
-            label="Frequencia de dividendo"
+            label="Frequência de dividendo"
             value={`${investment.frequenciaDividendo}x ao ano`}
           />
           <InfoRow label="Risco" value={investment.risco} />
@@ -568,7 +568,7 @@ export default function InvestmentDetailsPage() {
                 Conversar com Assistente sobre este ativo
               </Text>
               <Text style={styles.ctaSubtitle}>
-                Receba orientacoes personalizadas, tese de investimento e riscos
+                Receba orientações personalizadas, tese de investimento e riscos
               </Text>
             </View>
           </Card>
