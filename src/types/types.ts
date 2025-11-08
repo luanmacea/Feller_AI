@@ -214,6 +214,26 @@ export interface IRecommendedInvestment {
     }
   }
 }
+// export interface IRecommendedInvestmentQuero {
+//   carteira: [
+//     {
+//       tipoInvestimento: string
+//       porcentagem: number
+//       investimentos: {
+//         id: number
+//         nome: string
+//         simbolo: string
+//         categoria: string
+//         risco: string
+//         precoAtual: number
+//         precoBase: number
+//         variacaoPercentual: number
+//         dividendYield: number
+//         descricao: string
+//       }[]
+//     },
+//   ]
+// }
 
 export interface ISelectablePlaylist {
   playlistId: number

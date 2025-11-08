@@ -316,10 +316,9 @@ export default function InvestmentDetailsPage() {
           <View style={{ flex: 1 }}>
             <Text variant="title">{investment.nome}</Text>
             <Text variant="caption">
-              {investment.simbolo} Ã¯Â¿Â½{' '}
-              {investment.categoria.replace('_', ' ')}
+              {investment.simbolo} {investment.categoria.replace('_', ' ')}
             </Text>
-            <Text variant="caption">_{investment.descricao}_</Text>
+            <Text variant="caption">{investment.descricao}</Text>
           </View>
         </Card>
 

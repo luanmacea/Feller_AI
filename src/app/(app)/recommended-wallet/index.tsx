@@ -163,6 +163,11 @@ export default function RecommendedWalletPage() {
         '/investimentos/recomendados/enriquecidos',
       )
 
+      // console.log(
+      //   'Dados da carteira recomendada:',
+      //   JSON.stringify(data, null, 2),
+      // )
+
       const carteiraNormalizada = normalizeCarteiraPercentuais(data.carteira)
 
       setCarteiraData({ ...data, carteira: carteiraNormalizada })
