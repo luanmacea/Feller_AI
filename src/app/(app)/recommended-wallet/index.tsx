@@ -33,9 +33,9 @@ type CarteiraKey = keyof Carteira
 const CATEGORIES_ORDER: CarteiraKey[] = [
   'renda_fixa',
   'tesouro_direto',
-  'fundo_imobiliario',
-  'renda_variavel',
-  'cripto',
+  'fundos_imobiliarios',
+  'acoes',
+  'criptomoedas',
 ]
 
 export default function RecommendedWalletPage() {
@@ -254,13 +254,13 @@ export default function RecommendedWalletPage() {
         icon: 'shield',
         color: '#3b82f6',
       },
-      fundo_imobiliario: {
+      fundos_imobiliarios: {
         nome: 'Fundos Imobiliários',
         icon: 'home',
         color: '#8b5cf6',
       },
-      renda_variavel: { nome: 'Ações', icon: 'activity', color: '#f59e0b' },
-      cripto: { nome: 'Criptomoedas', icon: 'zap', color: '#ef4444' },
+      acoes: { nome: 'Ações', icon: 'activity', color: '#f59e0b' },
+      criptomoedas: { nome: 'Criptomoedas', icon: 'zap', color: '#ef4444' },
     }
 
     return Object.entries(carteiraData.carteira)
